@@ -332,7 +332,9 @@
         // Hangman Emoji 提示庫
         const G3_EMOJI_HINTS = {
             'PUPPET': '🎎', 'SKATEBOARD': '🛹', 'HISTORY': '🏛️', 'HARD': '💪', 'EASY': '😌', 
-            'DOLLAR': '💵', 'HAND': '🖐️', 'FOOT': '🦶', 'SCIENCE': '🔬', 'MATHS': '➕'
+            'DOLLAR': '💵', 'HAND': '🖐️', 'FOOT': '🦶', 'SCIENCE': '🔬', 'MATHS': '➕',
+            // 新增身體部位，讓新增單字時可以直接用
+            'EAR': '👂', 'EYE': '👁️', 'HEAD': '👤', 'NOSE': '👃', 'MOUTH': '👄', 'ARM': '💪', 'LEG': '🦵'
         };
 
         // 新增：常用動詞和日常活動的 Emoji 映射表
@@ -451,24 +453,24 @@
             if (word.length === 0) return word;
 
             // 1. 檢查是否需要保持原樣大寫 (Caps Lock 強調)
-            const hasUpperCase = /[A-Z]/.test(word);
-            
-            if (hasUpperCase) {
-                // 如果原始單詞包含大寫（無論是不是全大寫），則保持原始輸入
-                return word;
-            }
+            const isWordAllCaps = word === word.toUpperCase() && word.length > 1; 
             
             // 2. 特殊單字檢查 (I 永遠大寫)
             if (word.toUpperCase() === 'I') {
                 return 'I';
             }
+
+            // 3. 檢查是否應保持後台輸入的大小寫 (Level 3)
+            if (isWordAllCaps || /[a-z]/.test(word) && /[A-Z]/.test(word)) { 
+                return word; // 保持原始輸入大小寫
+            }
             
-            // 3. 句首檢查 (僅當它不是句首的標點符號時)
+            // 4. 句首檢查 (Level 1)
             if (isSentenceStart && word.match(/^[a-z]/i)) {
                 return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
             }
 
-            // 4. 預設轉換為全小寫
+            // 5. 預設轉換為全小寫
             return word.toLowerCase();
         }
         
@@ -866,20 +868,41 @@
         }
 
         function getEmojiHint(word) {
-            // 嘗試精確匹配，否則返回一個問號
-            return G3_EMOJI_HINTS[word] || '❓';
+            // 1. 檢查硬編碼列表
+            if (G3_EMOJI_HINTS[word]) {
+                return G3_EMOJI_HINTS[word];
+            }
+
+            // 2. 嘗試從單字中提取關鍵字進行匹配
+            const baseWord = word.toUpperCase();
+            
+            for (const key in G3_EMOJI_HINTS) {
+                if (baseWord.includes(key) && key.length > 2) { // 避免匹配太短的字母
+                    return G3_EMOJI_HINTS[key];
+                }
+            }
+            
+            // 3. 預設返回問號
+            return '❓';
         }
 
         function initGame3() {
             const source = localData.g3_words;
             if (source.length === 0) { MessageBox.show("請在後台新增 hangman 單字！", true); return; }
 
+            // 單字應保持原始大小寫，但我們必須使用大寫來查找 Emoji 和進行遊戲邏輯
             const randomWord = source[Math.floor(Math.random() * source.length)];
-            state.g3_currentGuessWord = randomWord.toUpperCase(); 
+            
+            state.g3_currentWord = randomWord; // 儲存原始大小寫
+            state.g3_currentGuessWord = randomWord.toUpperCase(); // 邏輯層使用大寫
+            
             state.g3_guessedLetters = new Set();
             state.g3_wrongGuesses = 0;
             state.g3_gameStatus = 'playing';
+            
+            // 獲取 Emoji 時使用大寫形式進行查找
             state.g3_emojiHint = getEmojiHint(state.g3_currentGuessWord);
+            
             renderGame3(); 
         }
 
@@ -899,10 +922,10 @@
 
             if (guessedCorrectly) {
                 state.g3_gameStatus = 'won';
-                MessageBox.show(`恭喜您！單字是 ${state.g3_currentGuessWord.toLowerCase()}！🎉`, false);
+                MessageBox.show(`恭喜您！單字是 ${state.g3_currentWord}！🎉`, false);
             } else if (state.g3_wrongGuesses >= state.g3_MAX_WRONG) {
                 state.g3_gameStatus = 'lost';
-                MessageBox.show(`很可惜。正確單字是 ${state.g3_currentGuessWord.toLowerCase()}。😭`, true);
+                MessageBox.show(`很可惜。正確單字是 ${state.g3_currentWord}。😭`, true);
             }
         }
 
@@ -910,14 +933,15 @@
             const container = document.getElementById('game-content');
             if (currentGame !== 'game3') return;
             
-            // 應用格式化：單字保持後台儲存的大小寫（但因為是 Hangman，通常會是全大寫）
-            const formattedWord = state.g3_currentGuessWord;
+            const rawWord = state.g3_currentWord;
 
-            const displayWord = formattedWord.split('').map(char => {
+            const displayWord = rawWord.split('').map(char => {
                 if (char === ' ') return '&nbsp;&nbsp;'; 
+                const upperCaseChar = char.toUpperCase();
                 const isGameOver = state.g3_gameStatus === 'won' || state.g3_gameStatus === 'lost';
-                if (state.g3_guessedLetters.has(char) || isGameOver) {
-                    return formatDisplayWord(char); 
+                
+                if (state.g3_guessedLetters.has(upperCaseChar) || isGameOver) {
+                    return formatDisplayWord(char); // 顯示原始大小寫或轉換
                 }
                 return '_';
             }).join(' ');
@@ -1540,7 +1564,7 @@
                  if (!isNaN(numToRead) && numToRead > 0) {
                     const wordResult = numberToWords(numToRead) + " dollars";
                     MessageBox.show(`朗讀金額: ${wordResult}`, false);
-                    // 不執行 callTTS
+                    callTTS(wordResult); // 恢復朗讀金額
                  } else {
                      MessageBox.show("請先輸入金額！", true);
                  }
@@ -2100,7 +2124,7 @@
                 if (!input1) { MessageBox.show("請填寫英文片語/動作！", true); return; }
                 
                 // 1. 自動提取 Emoji (使用完整的句子)
-                const newEmoji = generateEmojiFromWord(input1);
+                const newEmoji = generateEmojiFromWord(input1.toUpperCase()); // 使用大寫版本進行匹配
                 
                 // 2. 確定 URL (如果 input2 是空的，則生成一個隨機顏色的 Placeholder)
                 let finalUrl = input2;
