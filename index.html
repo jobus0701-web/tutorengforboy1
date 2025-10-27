@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文學習遊戲樂園-1</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* 定義可愛的卡通字體，使用 Inter 搭配圓角和粗體營造童趣感 */
+        .game-font {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* 游標閃爍動畫 */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor {
+            animation: blink 1s step-end infinite;
+        }
+
+        /* 按鈕基礎樣式 */
+        .key-btn {
+            height: 50px; /* Base height */
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+        .shadow-cute {
+            box-shadow: 0 4px 0 0 #D1A3A3;
+        }
+        .key-btn:active {
+            box-shadow: 0 2px 0 0 #D1A3A3;
+            transform: translateY(2px);
+        }
+
+        /* Game 2: 記憶卡片 */
+        .match-card-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            border-radius: 1rem;
+            border: 4px solid;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+        .matched-success {
+            background-color: #90EE90 !important;
+            border-color: #3CB371 !important;
+            color: #1E40AF !important;
+            cursor: default;
+        }
+
+        /* Game 4: Bingo */
+        .bingo-grid {
+            display: grid;
+            gap: 4px;
+            aspect-ratio: 1 / 1;
+        }
+        .bingo-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 4px;
+            text-align: center;
+            background-color: #FFEC99;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid #FFD700;
+            transition: all 0.2s;
+            height: 100%;
+            text-transform: uppercase;
+        }
+        .bingo-cell.marked {
+            background-color: #90EE90;
+            border-color: #3CB371;
+            color: white;
+            transform: scale(0.95);
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+        @media (min-width: 768px) {
+            .bingo-cell {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Game 5: 問句重組大師 */
+        .word-block {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+            height: 45px;
+            padding: 0 10px;
+            margin: 5px;
+            background-color: #FFC7C7; 
+            border: 3px solid #FF8FAB;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 3px 0 0 #D1A3A3;
+        }
+        .word-block.used {
+            opacity: 0.5;
+            cursor: default;
+            background-color: #F8F8F8;
+            border-color: #CCCCCC;
+            box-shadow: none;
+        }
+        .answer-slot {
+            min-width: 80px;
+            height: 50px;
+            margin: 5px;
+            padding: 5px;
+            border: 3px dashed #BDE0FE;
+            border-radius: 10px;
+            background-color: #F0F8FF;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #4A5568;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .answer-slot.incorrect {
+            animation: shake 0.3s 2;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Game 6, 7, 8: 配對與拖曳底座 */
+        .image-target {
+            min-height: 120px;
+            background-color: #fff;
+            border: 3px solid #FF8FAB;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .drag-source {
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 3px 0 0 #D1A3A3;
+            transition: transform 0.1s;
+        }
+        .drag-source:active {
+            cursor: grabbing;
+            box-shadow: 0 1px 0 0 #D1A3A3;
+            transform: translateY(2px);
+        }
+        .drag-area {
+            border: 3px dashed #BDE0FE;
+            border-radius: 12px;
+            min-height: 150px;
+            padding: 10px;
+        }
+        
+        /* Game 8 專用樣式 */
+        .digraph-display-box {
+            min-width: 150px;
+            min-height: 100px;
+            background-color: #f0f0f0;
+            border: 5px solid #FF8FAB;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .digraph-letter-part {
+            font-size: 4rem;
+            font-weight: 900;
+            color: #1E40AF; /* 深藍色 */
+        }
+        .digraph-blank {
+            width: 80px;
+            height: 80px;
+            background-color: #FFEC99;
+            border: 4px dashed #FFD700;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #D1A3A3;
+        }
+
+    </style>
+
+    <script>
+        // 設定 Tailwind 配置, 使用柔和可愛的馬卡龍配色
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-pink': '#FFC7C7',      
+                        'secondary-blue': '#BDE0FE',    
+                        'accent-yellow': '#FFEC99',     
+                        'background-light': '#F8F8F8',  
+                        'keyboard-bg': '#FFF5D6',       
+                    },
+                    boxShadow: {
+                        'cute': '0 4px 0 0 #D1A3A3',    
+                        'key-active': '0 2px 0 0 #D1A3A3', 
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background-light min-h-screen game-font flex flex-col items-center p-4">
+
+    <!-- 訊息提示框 -->
+    <div id="message-box" class="fixed top-4 right-4 bg-red-500 text-white p-3 rounded-lg shadow-xl z-50 transition-opacity duration-300 hidden">
+        <p id="message-content"></p>
+    </div>
+
+    <!-- 頂部標題與導航 -->
+    <header class="w-full max-w-6xl text-center mb-4 p-4 bg-primary-pink rounded-2xl shadow-lg border-b-4 border-pink-400">
+        <h1 class="text-3xl md:text-5xl font-extrabold text-white tracking-wider">
+            <!-- 可愛小豬圖示 (SVG) -->
+            <svg class="h-10 w-10 md:h-12 md:w-12 inline-block mr-3 transform -translate-y-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM15 9C15.8284 9 16.5 8.32843 16.5 = 7.5C16.5 6.67157 15.8284 6 15 6C14.1716 6 13.5 6.67157 13.5 7.5C13.5 8.32843 14.1716 9 15 9ZM9 9C9.82843 9 10.5 8.32843 10.5 7.5C10.5 6.67157 9.82843 6 9 6C8.17157 6 7.5 6.67157 7.5 7.5C7.5 8.32843 8.17157 9 9 9Z" fill="#FF8FAB"/><path d="M12 17C14.2091 17 16 15.2091 16 13C16 10.7909 14.2091 9 12 9C9.79086 9 8 10.7909 8 13C8 15.2091 9.79086 17 12 17Z" fill="#F0B5C2"/><circle cx="11" cy="13" r="1" fill="#FF8FAB"/><circle cx="13" cy="13" r="1" fill="#FF8FAB"/></svg>
+            英文遊戲樂園-1
+        </h1>
+    </header>
+
+    <!-- 導航列 -->
+    <nav class="w-full max-w-6xl mb-6">
+        <div class="grid grid-cols-4 gap-2 md:gap-4 justify-center">
+            
+            <button data-game="game2" onclick="changeGame('game2')" class="tab-btn">🎶 配對</button>
+            <button data-game="game3" onclick="changeGame('game3')" class="tab-btn">🖍️ Hangman</button>
+            <button data-game="game4" onclick="changeGame('game4')" class="tab-btn">🎤 賓果</button>
+            <button data-game="game5" onclick="changeGame('game5')" class="tab-btn">💬 問句</button>
+            
+            <button data-game="game6" onclick="changeGame('game6')" class="tab-btn">🤸 日常</button>
+            <button data-game="game7" onclick="changeGame('game7')" class="tab-btn">🏃 動詞</button>
+            <button data-game="game8" onclick="changeGame('game8')" class="tab-btn">💥 發音機</button>
+            <button data-game="admin" onclick="changeGame('admin')" class="tab-btn">⚙️ 後台</button>
+        </div>
+    </nav>
+
+    <!-- 主內容區 -->
+    <main id="game-content" class="w-full max-w-6xl bg-white p-4 md:p-8 rounded-2xl shadow-xl border-4 border-secondary-blue flex flex-col space-y-6 min-h-[600px]">
+        <div class="flex justify-center items-center h-full">
+            <p class="text-xl text-gray-500">正在載入應用程式...</p>
+        </div>
+    </main>
+    
+    <script>
+        // --- 全域設定與工具 ---
+        const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
+        const LOCAL_STORAGE_KEY = 'GAMES_CUSTOM_DATA_V2';
+        const G4_BINGO_SIZE = 4;
+
+        let currentGame = 'game2'; // 更改預設遊戲為 game2
+        let localData = {}; // 存放所有遊戲的自訂數據
+        let isGeneratingImage = false; // AI 圖片生成狀態旗標
+        
+        // Hangman Emoji 提示庫
+        const G3_EMOJI_HINTS = {
+            'PUPPET': '🎎', 'SKATEBOARD': '🛹', 'HISTORY': '🏛️', 'HARD': '💪', 'EASY': '😌', 
+            'DOLLAR': '💵', 'HAND': '🖐️', 'FOOT': '🦶', 'SCIENCE': '🔬', 'MATHS': '➕'
+        };
+
+
+        // 預設單字庫 (Phonics 2, STEP 3 詞彙)
+        const DEFAULT_WORDS = {
+            // Game 2: 🎶 Phonics 發音配對
+            g2_words: [
+                { id: crypto.randomUUID(), phonics: 'A-E', word: 'CAKE', hint: '生日蛋糕' },
+                { id: crypto.randomUUID(), phonics: 'IE', word: 'PIE', hint: '美味的派' },
+                { id: crypto.randomUUID(), phonics: 'OO', word: 'FOOD', hint: '好吃的食物' },
+                { id: crypto.randomUUID(), phonics: 'EW', word: 'NEW', hint: '新的' },
+                { id: crypto.randomUUID(), phonics: 'OA', word: 'BOAT', hint: '一艘船' },
+                { id: crypto.randomUUID(), phonics: 'EE', word: 'BEE', hint: '小蜜蜂' },
+            ],
+            // Game 3: 🖍️ Hangman 猜單字
+            g3_words: ['PUPPET', 'SKATEBOARD', 'HISTORY', 'HARD', 'EASY', 'DOLLAR', 'HAND', 'FOOT'],
+            // Game 4: 🎤 雙人賓果
+            g4_bingo_words: ['SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY', 'HUNDRED', 'THOUSAND', 'DOLLAR', 'HOSPITAL', 'PARK', 'BANK', 'COAT', 'JEANS', 'GLOVES', 'HAT', 'SCARF', 'TIE'],
+            // Game 5: 💬 問句重組大師
+            g5_sentences: [
+                "What does he do after school?",
+                "When does she have English?",
+                "How much is the skateboard?",
+                "How many legs does it have?",
+                "Is the yellow one longer?",
+                "I'm going to the airport."
+            ],
+            // Game 6: 🤸 日常活動圖像配對 (Word: Image_Concept) - 使用剛剛生成的圖片 URL
+            g6_routines: [
+                { id: crypto.randomUUID(), word: 'WASH HIS FACE', image: '洗臉', url: 'http://googleusercontent.com/image_generation_content/0' },
+                { id: crypto.randomUUID(), word: 'DO HER HOMEWORK', image: '寫作業', url: 'https://placehold.co/150x120/ff8a65/000000?text=GIRL%20DOING%20HOMEWORK' },
+                { id: crypto.randomUUID(), word: 'BRUSH HIS TEETH', image: '刷牙', url: 'https://placehold.co/150x120/9ccc65/000000?text=KID%20BRUSHING%20TEETH' },
+                { id: crypto.randomUUID(), word: 'PLAY ON HIS PHONE', image: '玩手機', url: 'https://placehold.co/150x120/ab47bc/ffffff?text=CHILD%20PLAYING%20ON%20PHONE' },
+            ],
+            // Game 7: 🏃 動詞連連看 (Verb: Image_Concept for Present Continuous) - 使用更具體和多樣的 Placeholder URL
+            g7_verbs: [
+                { id: crypto.randomUUID(), verb: 'IS JUMPING', image: '跳躍', url: 'https://placehold.co/150x120/5c6bc0/ffffff?text=JUMPING%20IN%20AIR' },
+                { id: crypto.randomUUID(), verb: 'IS PAINTING', image: '畫畫', url: 'https://placehold.co/150x120/ef5350/ffffff?text=KID%20PAINTING' },
+                { id: crypto.randomUUID(), verb: 'IS SKIPPING', image: '跳繩', url: 'https://placehold.co/150x120/64b5f6/000000?text=SKIPPING%20ROPE' },
+                { id: crypto.randomUUID(), verb: 'IS JOGGING', image: '慢跑', url: 'https://placehold.co/150x120/4db6ac/000000?text=BOY%20JOGGING%20OUTSIDE' },
+            ],
+            // Game 8: 💥 神奇發音機 (Digraph: Word_Template)
+            g8_digraphs: [
+                { id: crypto.randomUUID(), digraph: 'SH', word: '_OP', full: 'SHOP' },
+                { id: crypto.randomUUID(), digraph: 'CH', word: '_AT', full: 'CHAT' },
+                { id: crypto.randomUUID(), digraph: 'TH', word: '_INK', full: 'THINK' },
+                { id: crypto.randomUUID(), digraph: 'WH', word: '_ALE', full: 'WHALE' },
+                { id: crypto.randomUUID(), digraph: 'PH', word: 'ELE_ANT', full: 'ELEPHANT' },
+            ],
+        };
+
+        // --- 遊戲狀態管理 ---
+        let state = {
+            // G2
+            g2_matchCards: [],
+            g2_flippedCards: [],
+            g2_matchCount: 0,
+            g2_gameStatus: 'ready',
+            // G3
+            g3_currentGuessWord: '',
+            g3_guessedLetters: new Set(),
+            g3_wrongGuesses: 0,
+            g3_gameStatus: 'ready',
+            g3_MAX_WRONG: 6,
+            g3_emojiHint: '', // 新增 Emoji 提示
+            // G4
+            g4_players: [],
+            g4_calledWords: new Set(),
+            g4_lastCalledWord: '',
+            g4_gameStatus: 'ready',
+            g4_isCalling: false,
+            // G5
+            g5_currentSentence: '',
+            g5_answerWords: [],
+            g5_scrambleBlocks: [],
+            g5_currentSort: [],
+            g5_gameStatus: 'ready',
+            // G6
+            g6_targets: [],
+            g6_sources: [],
+            g6_matches: 0,
+            // G7
+            g7_targets: [], // 主詞/動詞 (e.g. He is)
+            g7_sources: [], // 動作 (e.g. jumping)
+            g7_matches: 0,
+            // G8
+            g8_currentWord: null,
+            g8_gameStatus: 'ready',
+            g8_score: 0,
+        };
+
+        // --- TTS & Utility ---
+
+        async function callTTS(text) {
+            if (!('speechSynthesis' in window)) {
+                console.warn("SpeechSynthesis not supported.");
+                return;
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US'; 
+            utterance.rate = 0.9;
+            
+            await new Promise(resolve => {
+                utterance.onend = resolve;
+                utterance.onerror = (e) => { console.error("SpeechSynthesis error:", e); resolve(); };
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+
+        const MessageBox = {
+            show: (message, isError = true) => {
+                const box = document.getElementById('message-box');
+                const content = document.getElementById('message-content');
+                
+                content.textContent = message;
+                box.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+                box.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
+
+                setTimeout(() => box.classList.add('hidden'), 3000);
+            }
+        };
+
+        function shuffleArray(array) {
+            let temp = [...array];
+            for (let i = temp.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [temp[i], temp[j]] = [temp[j], temp[i]];
+            }
+            return temp;
+        }
+
+        // --- LocalStorage 存儲功能 (統一管理所有遊戲數據) ---
+
+        function loadWordsFromLocal() {
+            try {
+                const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+                const loaded = stored ? JSON.parse(stored) : {};
+                
+                // 1. 初始化 localData 為 DEFAULT_WORDS 的深拷貝（確保 ID 獨立）
+                localData = JSON.parse(JSON.stringify(DEFAULT_WORDS));
+                
+                for (const key in loaded) {
+                    if (Array.isArray(loaded[key])) {
+                        localData[key] = loaded[key].map(item => {
+                            // 2. 確保載入的物件有 ID，如果沒有，賦予一個新的 ID
+                            if (typeof item === 'object' && item !== null && !item.id) {
+                                return { ...item, id: crypto.randomUUID() };
+                            }
+                            return item;
+                        }).filter(item => item !== null && item !== undefined); 
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading words from local storage:", e);
+                // 如果出錯，至少使用預設值
+                localData = DEFAULT_WORDS;
+            }
+        }
+
+        function saveWordsToLocal() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localData));
+            } catch (e) {
+                console.error("Error saving words to local storage:", e);
+                MessageBox.show("無法保存單字到您的瀏覽器。", true);
+            }
+        }
+
+        // --- 核心應用程式控制 ---
+        function setTabActive(gameName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-primary-pink', 'text-white', 'shadow-xl', 'scale-105');
+                btn.classList.add('bg-white', 'text-gray-700', 'shadow-md');
+            });
+
+            const activeTab = document.querySelector(`.tab-btn[data-game="${gameName}"]`);
+            if (activeTab) {
+                activeTab.classList.remove('bg-white', 'text-gray-700', 'shadow-md');
+                activeTab.classList.add('bg-primary-pink', 'text-white', 'shadow-xl', 'scale-105');
+            }
+        }
+
+        function changeGame(gameName) {
+            currentGame = gameName;
+            setTabActive(gameName);
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderApp() {
+            loadWordsFromLocal(); // 每次渲染前載入
+
+            switch (currentGame) {
+                
+                case 'game2': initGame2(); break;
+                case 'game3': initGame3(); break;
+                case 'game4': initGame4(); break;
+                case 'game5': initGame5(); break;
+                case 'game6': initGame6(); break;
+                case 'game7': initGame7(); break;
+                case 'game8': initGame8(); break;
+                case 'admin': renderWordAdmin(); break;
+                default: document.getElementById('game-content').innerHTML = `<p class="text-xl text-gray-500 text-center p-10">請選擇一個遊戲</p>`;
+            }
+        }
+
+        window.onload = function() {
+            // 替換導航按鈕樣式
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.add('bg-white', 'hover:bg-secondary-blue', 'py-2', 'px-3', 'md:px-4', 'rounded-full', 'text-xs', 'md:text-sm', 'font-bold', 'text-gray-700', 'transition', 'duration-300', 'shadow-md');
+            });
+            setTabActive(currentGame);
+            renderApp();
+        }
+
+        // --- Game 2: 🎶 Phonics 發音配對 (Vowel Sound Match) ---
+        const G2_COLORS = ['bg-red-200', 'bg-blue-200', 'bg-green-200', 'bg-yellow-200', 'bg-purple-200', 'bg-pink-200'];
+
+        function initGame2() {
+            const source = localData.g2_words;
+            if (source.length === 0) { MessageBox.show("請在後台新增 Phonics 配對單字！", true); return; }
+
+            state.g2_matchCount = 0;
+            state.g2_flippedCards = [];
+            state.g2_gameStatus = 'playing';
+
+            let cardValues = [];
+            source.forEach((item, index) => {
+                const color = G2_COLORS[index % G2_COLORS.length];
+                const groupId = `match-${item.phonics}-${index}`;
+
+                cardValues.push({ id: crypto.randomUUID(), type: 'PHONICS', value: item.phonics, groupId, color, matched: false, flipped: false, hint: item.hint });
+                cardValues.push({ id: crypto.randomUUID(), type: 'WORD', value: item.word, groupId, color, matched: false, flipped: false, hint: item.hint });
+            });
+
+            state.g2_matchCards = shuffleArray(cardValues);
+            renderGame2();
+        }
+
+        async function handleCardClickG2(id) {
+            const cardIndex = state.g2_matchCards.findIndex(c => c.id === id);
+            const card = state.g2_matchCards[cardIndex];
+
+            if (!card || card.matched || card.flipped || state.g2_flippedCards.length === 2) return;
+
+            card.flipped = true;
+            state.g2_flippedCards.push(card);
+            
+            // 點擊卡片時，不執行 callTTS(card.type === 'PHONICS' ? card.phonics : card.value);
+
+            if (state.g2_flippedCards.length === 2) {
+                const [card1, card2] = state.g2_flippedCards;
+                if (card1.groupId === card2.groupId) {
+                    card1.matched = true;
+                    card2.matched = true;
+                    state.g2_matchCount++;
+                    state.g2_flippedCards = [];
+                    renderGame2();
+                    if (state.g2_matchCount === localData.g2_words.length) {
+                        setTimeout(() => MessageBox.show("太棒了！所有發音配對成功！🎉", false), 500);
+                        state.g2_gameStatus = 'won';
+                    }
+                } else {
+                    setTimeout(() => {
+                        state.g2_matchCards.forEach(c => {
+                            if (c.id === card1.id || c.id === card2.id) c.flipped = false;
+                        });
+                        state.g2_flippedCards = [];
+                        renderGame2();
+                    }, 1000);
+                }
+            }
+            renderGame2();
+        }
+
+        function renderGame2() {
+            const container = document.getElementById('game-content');
+            if (currentGame !== 'game2') return;
+
+            const cardsHtml = state.g2_matchCards.map(card => {
+                let cardClasses = `h-24 md:h-32 match-card-item shadow-xl hover:shadow-2xl`;
+                let content = '';
+                let innerTextClass = `text-lg md:text-2xl font-extrabold text-gray-800`;
+
+                if (card.matched) {
+                    cardClasses += ` matched-success`;
+                    content = `${card.phonics} / ${card.value}`;
+                } else if (card.flipped) {
+                    cardClasses += ` ${card.color} border-gray-500`;
+                    content = card.type === 'PHONICS' ? `[${card.value}]` : card.value;
+                } else {
+                    cardClasses += ` bg-secondary-blue border-blue-600`;
+                    content = card.type === 'PHONICS' ? 'Phonics' : 'Word';
+                }
+
+                return `
+                    <div class="h-24 md:h-32 rounded-xl" onclick="handleCardClickG2('${card.id}')">
+                        <div class="${cardClasses}">
+                            <div class="text-center">
+                                <span class="${innerTextClass}">
+                                    ${content}
+                                </span>
+                                ${card.flipped && card.type === 'WORD' ? `<p class="text-xs text-gray-600 mt-1">(${card.hint})</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <section class="w-full bg-accent-yellow p-4 rounded-xl shadow-inner border-b-8 border-yellow-600">
+                    <h2 class="text-xl md:text-3xl font-bold text-yellow-900 mb-4 text-center">🎶 Phonics 發音配對 (Vowel Sound Match)</h2>
+                    <p class="text-center text-sm mb-4">目標: 點擊卡片，配對相同的長母音組合 ([A-E], [IE] 等) 和對應的單字。已完成 ${state.g2_matchCount}/${localData.g2_words.length} 組。</p>
+                    <div id="match-game-grid" class="grid grid-cols-4 gap-3 md:gap-4 max-w-2xl mx-auto">
+                        ${cardsHtml}
+                    </div>
+                    <div class="text-center mt-6">
+                        <button onclick="initGame2()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
+                            ${state.g2_matchCount === localData.g2_words.length ? '再玩一次' : '重新開始'}
+                        </button>
+                    </div>
+                </section>
+            `;
+        }
+        // --- Game 2 End ---
+
+        // --- Game 3: 🖍️ Hangman 猜單字 (Hangman) ---
+        function getHangmanSVG(wrongGuesses, status) {
+            const parts = [];
+            const color = status === 'won' ? '#3CB371' : (status === 'lost' ? '#FF4500' : '#4A5568'); 
+            const strokeStyle = `stroke="${color}" stroke-width="6" stroke-linecap="round"`;
+            parts.push(`<line x1="50" y1="200" x2="150" y2="200" stroke="${color}" stroke-width="6"/>`); 
+            parts.push(`<line x1="100" y1="200" x2="100" y2="20" stroke="${color}" stroke-width="6"/>`); 
+            parts.push(`<line x1="100" y1="20" x2="160" y2="20" stroke="${color}" stroke-width="6"/>`); 
+            parts.push(`<line x1="160" y1="20" x2="160" y2="40" stroke="${color}" stroke-width="3"/>`); 
+            if (wrongGuesses >= 1) parts.push(`<circle cx="160" cy="60" r="20" stroke="${color}" stroke-width="3" fill="none"/>`);
+            if (wrongGuesses >= 2) parts.push(`<line x1="160" y1="80" x2="160" y2="140" ${strokeStyle}/>`);
+            if (wrongGuesses >= 3) parts.push(`<line x1="160" y1="90" x2="140" y2="110" ${strokeStyle}/>`);
+            if (wrongGuesses >= 4) parts.push(`<line x1="160" y1="90" x2="180" y2="110" ${strokeStyle}/>`);
+            if (wrongGuesses >= 5) parts.push(`<line x1="160" y1="140" x2="140" y2="160" ${strokeStyle}/>`);
+            if (wrongGuesses >= 6) parts.push(`<line x1="160" y1="140" x2="180" y2="160" ${strokeStyle}/>`);
+            return `<svg width="200" height="220" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">${parts.join('')}</svg>`;
+        }
+
+        function getEmojiHint(word) {
+            // 嘗試精確匹配，否則返回一個問號
+            return G3_EMOJI_HINTS[word] || '❓';
+        }
+
+        function initGame3() {
+            const source = localData.g3_words;
+            if (source.length === 0) { MessageBox.show("請在後台新增 Hangman 單字！", true); return; }
+
+            const randomWord = source[Math.floor(Math.random() * source.length)];
+            state.g3_currentGuessWord = randomWord.toUpperCase(); 
+            state.g3_guessedLetters = new Set();
+            state.g3_wrongGuesses = 0;
+            state.g3_gameStatus = 'playing';
+            state.g3_emojiHint = getEmojiHint(state.g3_currentGuessWord);
+            renderGame3(); 
+        }
+
+        function guessLetterG3(letter) {
+            const upperCaseLetter = letter.toUpperCase();
+            if (state.g3_gameStatus !== 'playing' || state.g3_guessedLetters.has(upperCaseLetter)) return;
+            
+            state.g3_guessedLetters.add(upperCaseLetter);
+            if (!state.g3_currentGuessWord.includes(upperCaseLetter)) state.g3_wrongGuesses++;
+            checkWinConditionG3();
+            renderGame3();
+        }
+
+        function checkWinConditionG3() {
+            const hiddenWord = state.g3_currentGuessWord.split('').filter(char => char !== ' ');
+            const guessedCorrectly = hiddenWord.every(char => state.g3_guessedLetters.has(char));
+
+            if (guessedCorrectly) {
+                state.g3_gameStatus = 'won';
+                MessageBox.show(`恭喜您！單字是 ${state.g3_currentGuessWord}！🎉`, false);
+            } else if (state.g3_wrongGuesses >= state.g3_MAX_WRONG) {
+                state.g3_gameStatus = 'lost';
+                MessageBox.show(`很可惜。正確單字是 ${state.g3_currentGuessWord}。😭`, true);
+            }
+        }
+
+        function renderGame3() {
+            const container = document.getElementById('game-content');
+            if (currentGame !== 'game3') return;
+
+            const displayWord = state.g3_currentGuessWord.split('').map(char => {
+                if (char === ' ') return '&nbsp;&nbsp;'; 
+                const isGameOver = state.g3_gameStatus === 'won' || state.g3_gameStatus === 'lost';
+                if (state.g3_guessedLetters.has(char) || isGameOver) {
+                    return char.toLowerCase(); 
+                }
+                return '_';
+            }).join(' ');
+
+            const alphabetBtns = ALPHABET.map(letter => {
+                const upperCaseLetter = letter.toUpperCase();
+                let btnClass = 'bg-white hover:bg-secondary-blue';
+                let onClick = `guessLetterG3('${letter}')`;
+
+                if (state.g3_guessedLetters.has(upperCaseLetter)) {
+                    btnClass = state.g3_currentGuessWord.includes(upperCaseLetter) ? 'bg-green-400 cursor-not-allowed' : 'bg-red-400 cursor-not-allowed';
+                    onClick = '';
+                }
+                if (state.g3_gameStatus !== 'playing') { btnClass = 'bg-gray-300 cursor-not-allowed'; onClick = ''; }
+
+                return `<button onclick="${onClick}" class="key-btn ${btnClass} active:shadow-key-active shadow-cute text-xl md:text-2xl font-extrabold rounded-xl transition duration-150 text-gray-800">${letter}</button>`;
+            }).join('');
+
+            const hangmanDrawing = getHangmanSVG(state.g3_wrongGuesses, state.g3_gameStatus);
+            
+            container.innerHTML = `
+                <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">🖍️ Hangman 猜單字 (Word Guess)</h2>
+                </section>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1 p-4 bg-white rounded-xl shadow-md border-2 border-gray-200 flex flex-col items-center">
+                        <p class="text-lg font-semibold text-center mb-2 text-blue-800">💔 錯誤次數: ${state.g3_wrongGuesses}/${state.g3_MAX_WRONG}</p>
+                        <div class="w-full max-w-sm h-[250px] flex items-center justify-center mx-auto p-4">${hangmanDrawing}</div>
+                        <p class="text-4xl mt-2 text-center">提示: ${state.g3_emojiHint}</p>
+                    </div>
+                    <div class="flex-1 p-4 bg-keyboard-bg rounded-xl shadow-md border-2 border-gray-200">
+                        <p class="text-lg font-semibold text-center mb-4 text-blue-800">猜測單字:</p>
+                        <div class="text-center text-4xl md:text-6xl font-extrabold tracking-widest mb-6 p-2 bg-white rounded-lg border-b-4 border-gray-300 whitespace-nowrap overflow-x-auto">${displayWord}</div>
+                        <div class="grid grid-cols-7 gap-1 md:gap-2">${alphabetBtns}</div>
+                        <div class="text-center mt-6">
+                            <button onclick="initGame3()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
+                                ${state.g3_gameStatus === 'playing' ? '重設遊戲' : '開始新遊戲'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        // --- Game 3 End ---
+
+        // --- Game 4: 🎤 雙人賓果 (Bingo) ---
+        function generateBingoCardG4() {
+            const source = localData.g4_bingo_words;
+            if (source.length < G4_BINGO_SIZE * G4_BINGO_SIZE) {
+                MessageBox.show(`賓果單字庫不足 ${G4_BINGO_SIZE * G4_BINGO_SIZE} 個！`, true);
+                return Array(G4_BINGO_SIZE * G4_BINGO_SIZE).fill('ERROR');
+            }
+            return shuffleArray(source).slice(0, G4_BINGO_SIZE * G4_BINGO_SIZE);
+        }
+
+        function checkWinG4(player) {
+            let lines = 0;
+            const size = G4_BINGO_SIZE;
+            const card = player.card;
+            const marked = player.marked;
+
+            for (let i = 0; i < size; i++) {
+                let rowCount = 0;
+                let colCount = 0;
+                for (let j = 0; j < size; j++) {
+                    if (marked.has(card[i * size + j])) rowCount++;
+                    if (marked.has(card[j * size + i])) colCount++;
+                }
+                if (rowCount === size) lines++;
+                if (colCount === size) lines++;
+            }
+            let diag1Count = 0;
+            for (let i = 0; i < size; i++) { if (marked.has(card[i * size + i])) diag1Count++; }
+            if (diag1Count === size) lines++;
+
+            let diag2Count = 0;
+            for (let i = 0; i < size; i++) { if (marked.has(card[i * size + (size - 1 - i)])) diag2Count++; }
+            if (diag2Count === size) lines++;
+            
+            player.score = lines;
+            return lines >= 2;
+        }
+
+        function initGame4() {
+            state.g4_players = [
+                { id: 1, name: '玩家 1', card: generateBingoCardG4(), marked: new Set(), winner: false, score: 0 },
+                { id: 2, name: '玩家 2', card: generateBingoCardG4(), marked: new Set(), winner: false, score: 0 },
+            ];
+            state.g4_calledWords = new Set();
+            state.g4_lastCalledWord = '';
+            state.g4_gameStatus = 'ready';
+            state.g4_isCalling = false;
+            renderGame4();
+        }
+
+        async function startCallingG4() {
+            if (state.g4_gameStatus === 'finished') { initGame4(); return; }
+            if (state.g4_isCalling) return;
+            
+            const availableWords = shuffleArray(localData.g4_bingo_words.filter(w => !state.g4_calledWords.has(w)));
+            if (availableWords.length === 0) { MessageBox.show("單字庫已抽完！", true); return; }
+            
+            const nextWord = availableWords[0];
+            state.g4_lastCalledWord = nextWord;
+            state.g4_calledWords.add(nextWord);
+            
+            state.g4_isCalling = true;
+            state.g4_gameStatus = 'calling';
+            renderGame4(); 
+            
+            await callTTS(nextWord); 
+            
+            state.g4_isCalling = false; 
+
+            let winnerFound = false;
+            state.g4_players.forEach(player => {
+                if (checkWinG4(player)) {
+                    player.winner = true;
+                    winnerFound = true;
+                }
+            });
+
+            if (winnerFound) {
+                state.g4_gameStatus = 'finished';
+                renderGame4();
+                MessageBox.show(`賓果！玩家 ${state.g4_players.filter(p => p.winner).map(p => p.id).join(' 和 ')} 獲勝！`, false);
+            } else {
+                renderGame4();
+            }
+        }
+
+        function handleCardClickG4(playerId, index) {
+            const player = state.g4_players.find(p => p.id === playerId);
+            if (!player || state.g4_gameStatus !== 'calling' || player.winner) return;
+
+            const word = player.card[index];
+
+            if (state.g4_calledWords.has(word)) {
+                if (player.marked.has(word)) player.marked.delete(word);
+                else player.marked.add(word);
+
+                if (checkWinG4(player)) {
+                    player.winner = true;
+                    state.g4_gameStatus = 'finished';
+                    MessageBox.show(`賓果！玩家 ${playerId} 獲勝！`, false);
+                }
+                renderGame4();
+            } else {
+                MessageBox.show(`單字 ${word} 尚未被唸出！`, true);
+            }
+        }
+
+        function renderGame4() {
+            const container = document.getElementById('game-content');
+            if (currentGame !== 'game4') return;
+            
+            const renderCard = (player) => {
+                const cellsHtml = player.card.map((word, index) => {
+                    const isMarked = player.marked.has(word);
+                    return `<div class="bingo-cell ${isMarked ? 'marked' : 'hover:bg-yellow-300'}" onclick="handleCardClickG4(${player.id}, ${index})">${word}</div>`;
+                }).join('');
+
+                return `
+                    <div class="flex-1 min-w-0 p-3 rounded-xl shadow-lg border-4 ${player.winner ? 'border-green-600 bg-green-100' : 'border-secondary-blue bg-white'}">
+                        <h3 class="text-xl font-bold text-center mb-3 ${player.winner ? 'text-green-700' : 'text-blue-800'}">${player.name} ${player.winner ? '🎉 WINNER 🎉' : ''} (線數: ${player.score})</h3>
+                        <div class="bingo-grid mx-auto" style="grid-template-columns: repeat(${G4_BINGO_SIZE}, 1fr); grid-template-rows: repeat(${G4_BINGO_SIZE}, 1fr); max-width: 300px;">
+                            ${cellsHtml}
+                        </div>
+                    </div>
+                `;
+            };
+
+            const controlArea = `
+                <div class="text-center p-4 bg-keyboard-bg rounded-xl shadow-lg border-b-8 border-accent-yellow mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-3">${state.g4_gameStatus === 'ready' ? '準備開始' : state.g4_gameStatus === 'calling' ? '遊戲中' : '遊戲結束'}</h3>
+                    <div class="mb-4 h-12 flex items-center justify-center">
+                        <p class="text-4xl font-black text-red-700 transition duration-300">
+                            ${state.g4_lastCalledWord ? `單字: ${state.g4_lastCalledWord}` : state.g4_gameStatus === 'ready' ? '點擊開始按鈕' : '等待下一輪...'}
+                        </p>
+                    </div>
+                    <button onclick="startCallingG4()" 
+                            class="bg-primary-pink hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-cute text-xl transition duration-200 
+                                ${state.g4_isCalling || state.g4_gameStatus === 'finished' ? 'opacity-50 cursor-not-allowed' : ''}"
+                            ${state.g4_isCalling || state.g4_gameStatus === 'finished' ? 'disabled' : ''}>
+                        ${state.g4_gameStatus === 'ready' ? '🔊 開始遊戲 / 抽取單字' : state.g4_gameStatus === 'calling' ? (state.g4_isCalling ? '🎙️ 播報中...' : '🔊 抽取下一個單字') : '🔄 重新開始'}
+                    </button>
+                    <p class="text-xs text-gray-600 mt-2">已抽出 ${state.g4_calledWords.size} 個單字 / 剩餘 ${localData.g4_bingo_words.length - state.g4_calledWords.size} 個</p>
+                </div>
+            `;
+
+            container.innerHTML = `
+                <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-4 text-center">🎤 雙人英文賓果 (Two-Player Bingo)</h2>
+                    <p class="text-center text-sm text-blue-900 mb-6">目標: 聽取單字，並在您的 4x4 賓果卡上標記。最先完成兩條線獲勝！</p>
+                    ${controlArea}
+                    <div class="flex flex-col md:flex-row gap-6">
+                        ${renderCard(state.g4_players[0])}
+                        ${renderCard(state.g4_players[1])}
+                    </div>
+                </section>
+            `;
+        }
+        // --- Game 4 End ---
+
+        // --- Game 5: 💬 問句重組大師 (Sentence Scramble Master) ---
+        function getSentenceTokens(sentence) {
+            // 這個正則表達式會將單字、縮寫 (e.g., 's) 和標點符號分離為獨立詞塊
+            return sentence.match(/\b\w+'?\w*\b|[.,?!]/g) || [];
+        }
+
+        function shuffleWordsG5(sentence) {
+            const words = getSentenceTokens(sentence);
+            
+            // 複製一份用於打亂，並加入 ID
+            const scrambleArray = words.map(word => ({ id: crypto.randomUUID(), value: word.toUpperCase(), isUsed: false }));
+            
+            // 僅打亂單字和標點符號的順序
+            for (let i = scrambleArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [scrambleArray[i], scrambleArray[j]] = [scrambleArray[j], scrambleArray[i]];
+            }
+            return scrambleArray;
+        }
+
+        function initGame5() {
+            const source = localData.g5_sentences;
+            if (source.length === 0) { MessageBox.show("請在後台新增問句！", true); return; }
+
+            state.g5_currentSentence = source[Math.floor(Math.random() * source.length)];
+            
+            // 1. 產生亂序詞塊
+            state.g5_scrambleBlocks = shuffleWordsG5(state.g5_currentSentence);
+            
+            // 2. 初始化答案槽位 (數量等於詞塊總數)
+            state.g5_currentSort = Array(state.g5_scrambleBlocks.length).fill(null); 
+            state.g5_gameStatus = 'playing';
+
+            renderGame5();
+        }
+        
+        async function speakSentenceG5(sentence) { await callTTS(sentence); }
+
+        function handleWordClickG5(id) {
+            const wordBlock = state.g5_scrambleBlocks.find(l => l.id === id);
+            if (!wordBlock || wordBlock.isUsed || state.g5_gameStatus !== 'playing') return;
+
+            const targetIndex = state.g5_currentSort.findIndex(item => item === null);
+
+            if (targetIndex !== -1) {
+                state.g5_currentSort[targetIndex] = { value: wordBlock.value, id: wordBlock.id };
+                wordBlock.isUsed = true; 
+                renderGame5();
+                checkCompletionG5();
+            }
+        }
+        
+        function handleResetTargetG5(index) {
+            const item = state.g5_currentSort[index];
+            if (!item || state.g5_gameStatus !== 'playing') return;
+
+            // 找到被使用的詞塊，將其標記為未使用
+            const originalBlock = state.g5_scrambleBlocks.find(l => l.id === item.id);
+            if (originalBlock) originalBlock.isUsed = false;
+            
+            // 將後續的詞塊往前移，填補空位
+            for (let i = index; i < state.g5_currentSort.length - 1; i++) {
+                state.g5_currentSort[i] = state.g5_currentSort[i + 1];
+            }
+            state.g5_currentSort[state.g5_currentSort.length - 1] = null;
+
+            renderGame5();
+        }
+
+        function checkCompletionG5() {
+            if (state.g5_currentSort.some(item => item === null)) return;
+            
+            // --- 偵錯修正: 使用詞塊序列比對 ---
+            
+            // 1. 取得目標（正規）的詞塊序列 (Tokens)
+            const targetTokens = getSentenceTokens(state.g5_currentSentence).map(t => t.toUpperCase());
+            
+            // 2. 取得用戶排列的詞塊序列
+            const currentTokens = state.g5_currentSort.map(item => item.value.toUpperCase());
+            
+            // 3. 比較序列的長度和內容
+            let isCorrect = targetTokens.length === currentTokens.length;
+            if (isCorrect) {
+                for (let i = 0; i < targetTokens.length; i++) {
+                    // 確保逐一比較每個詞塊（包括標點符號）
+                    if (targetTokens[i] !== currentTokens[i]) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isCorrect) {
+                state.g5_gameStatus = 'won';
+                MessageBox.show("太棒了！句子順序完全正確！🎉", false);
+                speakSentenceG5(state.g5_currentSentence); 
+            } else {
+                const slots = document.querySelectorAll('.answer-slot');
+                slots.forEach(slot => {
+                    slot.classList.add('incorrect');
+                    setTimeout(() => slot.classList.remove('incorrect'), 500);
+                });
+                MessageBox.show("順序不正確，請再試試看！", true);
+            }
+        }
+
+        function renderGame5() {
+            const container = document.getElementById('game-content');
+            if (currentGame !== 'game5') return;
+
+            const targetBoxesHtml = state.g5_currentSort.map((item, index) => {
+                const isFilled = item !== null;
+                const displayWord = isFilled ? item.value : '（點擊詞塊填入）';
+                
+                return `
+                    <div class="answer-slot ${isFilled ? 'filled bg-green-200 border-green-400' : ''}"
+                         onclick="handleResetTargetG5(${index})">
+                        ${displayWord}
+                    </div>
+                `;
+            }).join('');
+
+            const letterBlocksHtml = state.g5_scrambleBlocks.map(wordBlock => `
+                <button onclick="handleWordClickG5('${wordBlock.id}')"
+                        class="word-block ${wordBlock.isUsed ? 'used' : 'hover:bg-yellow-300'}"
+                        ${wordBlock.isUsed || state.g5_gameStatus !== 'playing' ? 'disabled' : ''}>
+                    ${wordBlock.value}
+                </button>
+            `).join('');
+
+            container.innerHTML = `
+                <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">💬 問句重組大師 (Sentence Scramble Master)</h2>
+                    <p class="text-center text-sm text-blue-900 mb-4">💡 點擊詞塊，重組句子的正確順序！</p>
+                </section>
+                
+                <div class="p-4 bg-keyboard-bg rounded-xl shadow-md border-4 border-accent-yellow flex flex-col items-center">
+                    <div class="text-center mb-6">
+                        <button onclick="speakSentenceG5(state.g5_currentSentence)" 
+                                class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-cute text-xl flex items-center mx-auto">
+                            🔊 朗讀原始句子 (聽力輔助)
+                        </button>
+                    </div>
+
+                    <div class="text-center mb-6 p-4 bg-white rounded-xl shadow-inner border-4 border-gray-300 w-full">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">答案區 (點擊已填入詞塊可移除)</h3>
+                        <div class="flex flex-wrap justify-center">
+                            ${targetBoxesHtml}
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">詞塊庫 (點擊填入)</h3>
+                    <div class="flex flex-wrap justify-center p-2">
+                        ${letterBlocksHtml}
+                    </div>
+                    
+                    <div class="text-center mt-6">
+                        <button onclick="initGame5()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
+                            ${state.g5_gameStatus === 'won' ? '再玩一次' : '換個句子'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        // --- Game 5 End ---
+
+        // --- Game 6: 🤸 日常活動圖像配對 (Daily Routine Image Match) ---
+        function initGame6() {
+            const source = localData.g6_routines;
+            if (source.length === 0) { MessageBox.show("請在後台新增日常活動！", true); return; }
+
+            // 隨機選取 4 個配對
+            const pairs = shuffleArray(source).slice(0, 4);
+            
+            state.g6_targets = pairs.map(p => ({ ...p, matched: false })); // 圖片 (Target)
+            state.g6_sources = shuffleArray(pairs.map(p => ({ id: crypto.randomUUID(), word: p.word, isMatched: false }))); // 單字卡 (Source)
+            state.g6_matches = 0;
+            
+            // 啟用拖曳功能
+            setupDragDropG6();
+
+            renderGame6();
+        }
+
+        function setupDragDropG6() {
+            let draggedItem = null;
+
+            document.ondragstart = (e) => {
+                if (e.target.classList.contains('drag-source')) {
+                    draggedItem = e.target.dataset.word;
+                    e.dataTransfer.setData('text/plain', draggedItem);
+                    e.target.classList.add('opacity-50');
+                }
+            };
+
+            document.ondragend = (e) => {
+                if (e.target.classList.contains('drag-source')) {
+                    e.target.classList.remove('opacity-50');
+                    draggedItem = null;
+                }
+            };
+
+            document.ondragover = (e) => {
+                const target = e.target.closest('.image-target');
+                if (target) e.preventDefault();
+            };
+
+            document.ondrop = (e) => {
+                const target = e.target.closest('.image-target');
+                if (target && draggedItem) {
+                    e.preventDefault();
+                    
+                    const targetWord = target.dataset.word; // 圖片的正確單字
+                    const sourceWord = draggedItem; // 拖曳來源的單字
+
+                    if (sourceWord === targetWord) {
+                        handleMatchG6(sourceWord, targetWord, target);
+                    } else {
+                        MessageBox.show('配對錯誤，請再試試！', true);
+                    }
+                }
+            };
+        }
+        
+        async function handleMatchG6(sourceWord, targetWord, targetElement) {
+            state.g6_matches++;
+
+            // 1. 標記圖片為已配對
+            const targetIndex = state.g6_targets.findIndex(t => t.word === targetWord);
+            if (targetIndex !== -1) state.g6_targets[targetIndex].matched = true;
+
+            // 2. 移除來源卡片
+            state.g6_sources = state.g6_sources.filter(s => s.word !== sourceWord);
+
+            // 3. 更新 UI
+            renderGame6();
+            
+            // 4. 給予回饋 (不發聲)
+            targetElement.classList.add('border-green-600', 'bg-green-100');
+            MessageBox.show('配對成功！🎉', false);
+
+            if (state.g6_matches === state.g6_targets.length) {
+                MessageBox.show('太棒了！所有日常活動都配對成功！', false);
+            }
+        }
+
+
+        function renderGame6() {
+            const container = document.getElementById('game-content');
+            if (currentGame !== 'game6') return;
+
+            const targetsHtml = state.g6_targets.map(t => {
+                const isMatched = t.matched;
+                return `
+                    <div id="target-${t.word.replace(/\s/g, '_')}" 
+                         data-word="${t.word}" 
+                         class="image-target ${isMatched ? 'border-green-600 bg-green-100' : 'border-primary-pink'} p-2">
+                        <img src="${t.url}" alt="${t.image}" onerror="this.onerror=null; this.src='https://placehold.co/150x120/808080/ffffff?text=${t.word.replace(/\s/g, '+')}'" class="w-24 h-24 object-cover rounded-md mb-1"/>
+                        <p class="text-sm font-semibold text-gray-700">(${t.image})</p>
+                        ${isMatched ? `<p class="text-lg font-bold text-green-700 mt-1">${t.word}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            const sourcesHtml = state.g6_sources.map(s => `
+                <button draggable="true" data-word="${s.word}" class="drag-source key-btn bg-accent-yellow hover:bg-yellow-400 text-gray-800 font-bold py-2 px-4 rounded-xl text-sm md:text-base">${s.word}</button>
+            `).join('');
+
+            container.innerHTML = `
+                <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">🤸 日常活動圖像配對 (Daily Routine Image Match)</h2>
+                    <p class="text-center text-sm text-blue-900 mb-4">目標: 將下方的單字卡拖曳到上方對應的日常活動圖片上。</p>
+                </section>
+                
+                <div class="p-4 bg-white rounded-xl shadow-md border-4 border-gray-300 w-full">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        ${targetsHtml}
+                    </div>
+                </div>
+
+                <div class="p-4 bg-keyboard-bg rounded-xl shadow-md border-4 border-accent-yellow w-full">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">拖曳單字庫 (${state.g6_sources.length} 剩餘)</h3>
+                    <div class="flex flex-wrap justify-center gap-3 drag-area">
+                        ${sourcesHtml.length > 0 ? sourcesHtml : '<p class="text-lg font-bold text-green-700">全部完成！</p>'}
+                    </div>
+                </div>
+                
+                <div class="text-center mt-6">
+                    <button onclick="initGame6()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重新開始</button>
+                </div>
+            `;
+
+            if (state.g6_sources.length > 0) setupDragDropG6();
+        }
+        // --- Game 6 End ---
+
+        // --- Game 7: 🏃 動詞連連看 (Action Verb Connector) ---
+        function initGame7() {
+            const source = localData.g7_verbs;
+            if (source.length < 3) { MessageBox.show("請在後台新增至少 3 個動詞連連看詞彙！", true); return; }
+
+            const pairs = shuffleArray(source).slice(0, 3);
+            
+            // 左側：主詞 (He/She) - 隨機
+            state.g7_targets = pairs.map(p => ({ 
+                ...p, 
+                id: crypto.randomUUID(), 
+                subject: Math.random() < 0.5 ? 'HE IS' : 'SHE IS', 
+                matched: false 
+            })); 
+            
+            // 右側：動作 (Verb) - 打亂
+            state.g7_sources = shuffleArray(pairs.map(p => ({ id: crypto.randomUUID(), verb: p.verb, isMatched: false }))); 
+            
+            state.g7_matches = 0;
+            state.g7_selectedSource = null; // 點擊選中的動詞
+
+            renderGame7();
+        }
+
+        async function handleSourceClickG7(verb) {
+            if (state.g7_matches === state.g7_targets.length) return;
+            state.g7_selectedSource = verb;
+            // 移除 callTTS(verb);
+            renderGame7();
+        }
+
+        async function handleTargetClickG7(targetId) {
+            if (!state.g7_selectedSource) {
+                MessageBox.show('請先點擊一個動詞！', true);
+                return;
+            }
+
+            const targetIndex = state.g7_targets.findIndex(t => t.id === targetId);
+            const target = state.g7_targets[targetIndex];
+
+            if (target.matched) return;
+
+            // 邏輯: 任何 Subject + Verb Phrase 都是正確的，只要是未配對的目標即可
+            if (!target.matched) {
+                state.g7_matches++;
+                target.matched = true;
+                target.finalVerb = state.g7_selectedSource; // 標記最終配對的動詞
+                
+                // 移除已使用的動詞來源
+                state.g7_sources = state.g7_sources.filter(s => s.verb !== state.g7_selectedSource);
+
+                const fullSentence = `${target.subject} ${target.finalVerb}.`;
+                MessageBox.show('連線成功！🎉', false);
+                // 移除 callTTS(fullSentence);
+                
+                state.g7_selectedSource = null;
+                renderGame7();
+
+                if (state.g7_matches === state.g7_targets.length) {
+                    MessageBox.show('恭喜！所有連線完成！', false);
+                }
+            }
+        }
+
+        function renderGame7() {
+            const container = document.getElementById('game-content');
+            if (currentGame !== 'game7') return;
+
+            const targetsHtml = state.g7_targets.map(t => {
+                const isMatched = t.matched;
+                const sentence = isMatched ? `${t.subject} ${t.finalVerb}.` : `${t.subject} _____ ?`;
+                return `
+                    <div id="target-${t.id}" 
+                         onclick="handleTargetClickG7('${t.id}')"
+                         class="p-3 image-target ${isMatched ? 'border-green-600 bg-green-100' : 'border-secondary-blue hover:bg-blue-100'} cursor-pointer">
+                        <img src="${t.url}" alt="${t.image}" onerror="this.onerror=null; this.src='https://placehold.co/150x120/808080/ffffff?text=${t.image.replace(/\s/g, '+')}'" class="w-24 h-24 object-cover rounded-md mb-1"/>
+                        <p class="text-xs font-semibold text-gray-700">(${t.image})</p>
+                        <p class="text-lg font-bold text-center mt-2 ${isMatched ? 'text-green-700' : 'text-blue-800'}">${sentence}</p>
+                    </div>
+                `;
+            }).join('');
+
+            const sourcesHtml = state.g7_sources.map(s => {
+                const isSelected = state.g7_selectedSource === s.verb;
+                return `
+                    <button onclick="handleSourceClickG7('${s.verb}')" 
+                            class="key-btn font-bold py-2 px-4 rounded-xl text-sm md:text-base 
+                                ${isSelected ? 'bg-primary-pink shadow-xl ring-4 ring-pink-500' : 'bg-accent-yellow hover:bg-yellow-400 shadow-cute'}">
+                        ${s.verb}
+                    </button>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">🏃 動詞連連看 (Action Verb Connector)</h2>
+                    <p class="text-center text-sm text-blue-900 mb-4">目標: 點擊下方的動詞卡 (Verb)，再點擊上方的圖片 (Subject)，組成正確的現在進行式句子。</p>
+                </section>
+                
+                <div class="p-4 bg-white rounded-xl shadow-md border-4 border-gray-300 w-full">
+                    <div class="grid grid-cols-3 gap-4">
+                        ${targetsHtml}
+                    </div>
+                </div>
+
+                <div class="p-4 bg-keyboard-bg rounded-xl shadow-md border-4 border-accent-yellow w-full">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">動詞庫 (${state.g7_sources.length} 剩餘)</h3>
+                    <div class="flex flex-wrap justify-center gap-3">
+                        ${sourcesHtml}
+                    </div>
+                </div>
+                
+                <div class="text-center mt-6">
+                    <button onclick="initGame7()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重新開始</button>
+                </div>
+            `;
+        }
+        // --- Game 7 End ---
+
+        // --- Game 8: 💥 神奇發音機 (Digraph Blaster) ---
+        function initGame8() {
+            const source = localData.g8_digraphs;
+            if (source.length === 0) { MessageBox.show("請在後台新增 Digraph 單字！", true); return; }
+
+            state.g8_currentWord = shuffleArray(source)[0];
+            state.g8_gameStatus = 'playing';
+            state.g8_score = 0; // 重置分數
+            
+            // 每次出題時自動朗讀一次
+            callTTS(state.g8_currentWord.full);
+
+            renderGame8();
+        }
+        
+        async function handleDigraphClickG8(digraph) {
+            if (state.g8_gameStatus !== 'playing') return;
+
+            if (digraph === state.g8_currentWord.digraph) {
+                state.g8_score++;
+                MessageBox.show('正確！發射成功！💥', false);
+                
+                // 延遲換題
+                setTimeout(() => {
+                    const available = localData.g8_digraphs.filter(w => w.full !== state.g8_currentWord.full);
+                    if (available.length > 0) {
+                        state.g8_currentWord = shuffleArray(available)[0];
+                        callTTS(state.g8_currentWord.full); // 新題目朗讀
+                    } else {
+                        state.g8_currentWord = { digraph: 'ALL', word: 'DONE', full: 'ALL DONE' };
+                        state.g8_gameStatus = 'won';
+                    }
+                    renderGame8();
+                }, 1500);
+
+            } else {
+                state.g8_score = Math.max(0, state.g8_score - 1); // 扣分
+                MessageBox.show('錯誤！發射失敗！再試試其他組合。', true);
+                
+                // 錯誤時，不朗讀，但保持當前題目
+            }
+            renderGame8();
+        }
+
+        function renderGame8() {
+            const container = document.getElementById('game-content');
+            if (currentGame !== 'game8') return;
+
+            const wordBlock = state.g8_currentWord;
+            const blanks = wordBlock.word.includes('_') ? wordBlock.word.split('_') : ['', ''];
+            
+            const allDigraphs = [...new Set(localData.g8_digraphs.map(d => d.digraph))];
+            const digraphButtons = shuffleArray(allDigraphs).map(d => `
+                <button onclick="handleDigraphClickG8('${d}')"
+                        class="key-btn bg-red-400 hover:bg-red-500 active:shadow-key-active shadow-cute text-3xl font-bold text-white rounded-xl transition duration-150">
+                    ${d}
+                </button>
+            `).join('');
+
+            container.innerHTML = `
+                <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">💥 神奇發音機 (Digraph Blaster)</h2>
+                    <p class="text-center text-sm text-blue-900 mb-4">目標: 點擊正確的輔音字母組合 (${allDigraphs.join(', ')}) 來完成單字！</p>
+                </section>
+                
+                <div class="text-center text-2xl font-bold text-gray-700 mb-4">分數: ${state.g8_score}</div>
+
+                ${state.g8_gameStatus !== 'won' ? `
+                <div class="p-6 bg-keyboard-bg rounded-xl shadow-md border-4 border-accent-yellow flex flex-col items-center">
+                    
+                    <div class="flex flex-col items-center justify-center mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">點擊喇叭聽取單字發音:</h3>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div class="digraph-display-box flex items-center justify-center space-x-2 shadow-lg">
+                                <span class="digraph-letter-part">${blanks[0]}</span>
+                                <div class="digraph-blank">?</div>
+                                <span class="digraph-letter-part">${blanks[1]}</span>
+                            </div>
+                            <button onclick="callTTS(state.g8_currentWord.full)" 
+                                    class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition duration-200"
+                                    title="朗讀單字">
+                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11 5L6 9H2V15H6L11 19V5ZM19.5 12C19.5 14.3283 18.0792 16.3262 16 17.2025V6.7975C18.0792 7.67384 19.5 9.67174 19.5 12ZM16 13C16.8284 13 17.5 12.3284 17.5 11.5C17.5 10.6716 16.8284 10 16 10V13Z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-4 w-full max-w-lg">
+                        ${digraphButtons}
+                    </div>
+                </div>
+                ` : `<p class="text-4xl font-black text-green-700 p-10">恭喜！您已完成所有挑戰！總分 ${state.g8_score}！</p>`}
+                
+                <div class="text-center mt-6">
+                    <button onclick="initGame8()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重新開始</button>
+                </div>
+            `;
+        }
+        // --- Game 8 End ---
+
+        // --- AI Image Generation Function ---
+
+        async function generateImageAndAddWord(key, wordPhrase, imageConcept) {
+            if (isGeneratingImage) return;
+
+            isGeneratingImage = true;
+            
+            // 確保按鈕狀態更新
+            const addButton = document.getElementById('admin-add-button');
+            if (addButton) {
+                addButton.disabled = true;
+                addButton.innerHTML = '<span class="animate-spin mr-2">&#9696;</span> 🤖 生成圖片中...';
+            }
+            
+            // 建立針對兒童的卡通風格提示
+            const promptText = `A vibrant, clean cartoon illustration of a young child performing the action: ${wordPhrase}. The scene should be bright, cheerful, with thick outlines, suitable for primary school ESL students.`;
+            
+            const payload = { 
+                instances: { prompt: promptText }, 
+                parameters: { "sampleCount": 1 } 
+            };
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+            let generatedUrl = '';
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    const base64Data = result.predictions[0].bytesBase64Encoded;
+                    generatedUrl = `data:image/png;base64,${base64Data}`;
+                } else {
+                    MessageBox.show("AI 圖片生成失敗，請檢查提示詞或 API 狀態。", true);
+                }
+            } catch (error) {
+                console.error("Image generation API error:", error);
+                MessageBox.show("圖片生成時發生網路錯誤。", true);
+            } finally {
+                isGeneratingImage = false;
+            }
+
+            if (generatedUrl) {
+                // 手動構建並保存條目
+                let newEntry = null;
+                const newId = crypto.randomUUID();
+                if (key === 'g6_routines') {
+                    newEntry = { id: newId, word: wordPhrase, image: imageConcept, url: generatedUrl };
+                    localData[key].push(newEntry);
+                } else if (key === 'g7_verbs') {
+                    newEntry = { id: newId, verb: wordPhrase, image: imageConcept, url: generatedUrl };
+                    localData[key].push(newEntry);
+                }
+                
+                if (newEntry) {
+                    saveWordsToLocal();
+                    MessageBox.show(`AI 圖片生成並新增詞彙成功！`, false);
+                    
+                    // 清空輸入欄位並重新渲染
+                    document.getElementById('admin-input-1').value = '';
+                    document.getElementById('admin-input-2').value = '';
+                    document.getElementById('admin-input-3').value = '';
+                    renderWordAdmin();
+                    return;
+                }
+            }
+            
+            // 如果生成失敗，確保按鈕重設
+            renderWordAdmin();
+        }
+
+        // --- Admin Panel ---
+        const ADMIN_TABS = [
+            { key: 'g2_words', name: '🎶 Phonics 配對', isObjectArray: true },
+            { key: 'g3_words', name: '🖍️ Hangman', isObjectArray: false },
+            { key: 'g4_bingo_words', name: '🎤 賓果單字', isObjectArray: false },
+            { key: 'g5_sentences', name: '💬 問句重組', isObjectArray: false },
+            { key: 'g6_routines', name: '🤸 日常活動', isObjectArray: true },
+            { key: 'g7_verbs', name: '🏃 動詞連連看', isObjectArray: true },
+            { key: 'g8_digraphs', name: '💥 發音機', isObjectArray: true },
+        ];
+        let currentAdminKey = ADMIN_TABS[0].key;
+
+        function getCurrentAdminTab() {
+            return ADMIN_TABS.find(t => t.key === currentAdminKey);
+        }
+
+        function renderWordAdmin() {
+            const container = document.getElementById('game-content');
+            if (currentGame !== 'admin') return;
+
+            const currentList = localData[currentAdminKey] || [];
+            const currentTab = getCurrentAdminTab();
+            
+            // 根據類型調整輸入欄位
+            let inputField = '';
+            let addButtonText = '➕ 新增';
+            if (isGeneratingImage) addButtonText = '🤖 生成圖片中...';
+
+            if (currentAdminKey === 'g2_words') {
+                inputField = `
+                    <input type="text" id="admin-input-1" placeholder="Phonics 組合 (如: IE)" maxlength="5" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase w-1/4">
+                    <input type="text" id="admin-input-2" placeholder="對應單字 (如: PIE)" maxlength="20" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase flex-1">
+                    <input type="text" id="admin-input-3" placeholder="中文提示 (選填)" maxlength="20" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue flex-1">
+                `;
+            } else if (currentAdminKey === 'g8_digraphs') {
+                inputField = `
+                    <input type="text" id="admin-input-1" placeholder="Digraphs (如: SH)" maxlength="3" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase w-1/4">
+                    <input type="text" id="admin-input-2" placeholder="不完整單字 (如: _OP)" maxlength="10" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase flex-1">
+                    <input type="text" id="admin-input-3" placeholder="完整單字 (如: SHOP)" maxlength="10" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase flex-1">
+                `;
+            } else if (currentAdminKey === 'g6_routines' || currentAdminKey === 'g7_verbs') {
+                inputField = `
+                    <input type="text" id="admin-input-1" placeholder="英文片語/動作 (如: BRUSH TEETH)" maxlength="30" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase flex-1">
+                    <input type="text" id="admin-input-2" placeholder="中文/圖片概念 (如: 刷牙)" maxlength="20" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue flex-1">
+                    <input type="text" id="admin-input-3" placeholder="圖片URL (留空則AI生成)" maxlength="100" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue flex-1">
+                `;
+                addButtonText = isGeneratingImage ? addButtonText : '✨ AI生成並新增';
+            } else {
+                inputField = `<input type="text" id="admin-input-1" placeholder="單字或完整句子" maxlength="100" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase w-full">`;
+            }
+
+            const wordListHtml = currentList.map((item, index) => {
+                let display;
+                let deleteId;
+
+                if (currentTab.isObjectArray) {
+                    // Object Array: Use item.id for deletion
+                    display = JSON.stringify(item).replace(/"/g, '').replace(/{|}/g, '').toUpperCase();
+                    deleteId = item.id;
+                } else {
+                    // Simple String Array: Use index for deletion
+                    display = item;
+                    deleteId = index;
+                }
+
+                return `
+                    <li class="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm mb-2 border-l-4 border-primary-pink">
+                        <span class="text-sm md:text-lg font-bold text-gray-800">${index + 1}. ${display}</span>
+                        <button onclick="deleteWordAdmin('${deleteId}')" class="text-red-500 hover:text-red-700 font-bold p-1 rounded-full bg-red-100 transition duration-150">
+                            🗑️ 刪除
+                        </button>
+                    </li>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <section class="w-full bg-primary-pink p-4 rounded-xl shadow-inner border-b-8 border-pink-600">
+                    <h2 class="text-xl md:text-3xl font-bold text-white mb-2 text-center">⚙️ 單字/設定管理後台 (Local Storage Admin Panel)</h2>
+                    <p class="text-center text-sm text-pink-100">💡 這裡的單字僅儲存在您當前的瀏覽器中。選擇「日常活動/動詞連連看」，留空 URL 即可啟動 AI 生成圖片。</p>
+                </section>
+                
+                <div class="flex flex-wrap justify-center space-x-1 mb-4">
+                    ${ADMIN_TABS.map(tab => `
+                        <button onclick="setCurrentAdminKey('${tab.key}')" class="tab-btn py-2 px-3 ${currentAdminKey === tab.key ? 'bg-secondary-blue text-blue-900 shadow-lg' : 'bg-gray-100 text-gray-700'}">
+                            ${tab.name}
+                        </button>
+                    `).join('')}
+                </div>
+
+                <div class="p-6 bg-keyboard-bg rounded-xl shadow-md">
+                    <label for="admin-input-1" class="block text-lg font-semibold text-gray-800 mb-2">新增 ${currentTab.name} 詞彙</label>
+                    <div class="flex space-x-2">
+                        ${inputField}
+                        <button id="admin-add-button" onclick="addWordAdmin()" 
+                                class="bg-secondary-blue hover:bg-blue-400 text-blue-900 font-bold py-3 px-6 rounded-lg shadow-cute transition duration-150"
+                                ${isGeneratingImage ? 'disabled' : ''}>
+                            ${addButtonText}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-white rounded-xl shadow-md border-2 border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">${currentTab.name} 列表 (${currentList.length} 個)</h3>
+                    <ul class="max-h-80 overflow-y-auto">
+                        ${currentList.length > 0 ? wordListHtml : '<p class="text-gray-500 text-center py-4">目前沒有詞彙。請新增！</p>'}
+                    </ul>
+                    <p class="text-xs text-gray-400 mt-4 text-center">您的設定已自動儲存。</p>
+                </div>
+            `;
+        }
+        
+        function setCurrentAdminKey(key) {
+            currentAdminKey = key;
+            renderWordAdmin();
+        }
+
+        function addWordAdmin() {
+            if (isGeneratingImage) return;
+
+            const input1 = document.getElementById('admin-input-1')?.value.trim().toUpperCase();
+            const input2 = document.getElementById('admin-input-2')?.value.trim().toUpperCase();
+            const input3 = document.getElementById('admin-input-3')?.value.trim(); // URL 不轉換大寫
+
+            const currentTab = getCurrentAdminTab();
+
+            // --- AI 圖片生成邏輯 ---
+            const isImageGame = currentAdminKey === 'g6_routines' || currentAdminKey === 'g7_verbs';
+            if (isImageGame && input1 && input2 && !input3) {
+                 // 檢查必要欄位是否填寫
+                 if (!input1 || !input2) {
+                     MessageBox.show("請填寫英文片語和中文/圖片概念欄位以啟動 AI 生成。", true);
+                     return;
+                 }
+                 // 觸發 AI 生成流程
+                 generateImageAndAddWord(currentAdminKey, input1, input2);
+                 return;
+            }
+            // --- 結束 AI 邏輯 ---
+
+            let newEntry = null;
+
+            // 隨機生成一個 HEX 顏色作為預設圖片背景，以增加多樣性 (僅用於佔位圖)
+            const randomColor = Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+            let newPlaceholderUrl = input3;
+            
+            // 處理需要圖片的遊戲 (使用普通 Placeholder URL)
+            if (isImageGame && !input3) {
+                const textForPlaceholder = input1 ? input1.replace(/\s/g, '+') : (input2 ? input2.replace(/\s/g, '+') : 'IMAGE');
+                newPlaceholderUrl = `https://placehold.co/150x120/${randomColor}/ffffff?text=${textForPlaceholder}`;
+            }
+            
+            const newId = crypto.randomUUID();
+
+            if (currentAdminKey === 'g2_words') {
+                if (input1 && input2) newEntry = { id: newId, phonics: input1, word: input2, hint: input3 || '' };
+            } else if (currentAdminKey === 'g8_digraphs') {
+                if (input1 && input2 && input3) newEntry = { id: newId, digraph: input1, word: input2, full: input3 };
+            } else if (currentAdminKey === 'g6_routines') {
+                if (input1 && input2) newEntry = { id: newId, word: input1, image: input2, url: newPlaceholderUrl };
+            } else if (currentAdminKey === 'g7_verbs') {
+                if (input1 && input2) newEntry = { id: newId, verb: input1, image: input2, url: newPlaceholderUrl };
+            } else if (input1) {
+                // 通用單字或句子 (String Arrays)
+                newEntry = input1;
+            }
+            
+            if (!newEntry) { MessageBox.show("請填寫所有必要的欄位！", true); return; }
+
+            // 檢查重複 (簡易檢查)
+            const list = localData[currentAdminKey];
+            if (!currentTab.isObjectArray && list.includes(newEntry)) {
+                MessageBox.show("詞彙已存在！", true); return;
+            } else if (currentTab.isObjectArray && list.some(item => (item.word || item.verb || item.full) === (newEntry.word || newEntry.verb || newEntry.full))) {
+                 MessageBox.show("詞彙已存在！", true); return;
+            }
+
+
+            localData[currentAdminKey].push(newEntry);
+            saveWordsToLocal();
+            MessageBox.show(`詞彙新增成功！`, false);
+            // 清空輸入欄位
+            document.getElementById('admin-input-1').value = '';
+            if (document.getElementById('admin-input-2')) document.getElementById('admin-input-2').value = '';
+            if (document.getElementById('admin-input-3')) document.getElementById('admin-input-3').value = '';
+            renderWordAdmin();
+        }
+
+        function deleteWordAdmin(id) {
+            if (isGeneratingImage) {
+                MessageBox.show("圖片生成中，請稍候再試。", true);
+                return;
+            }
+            
+            const currentTab = getCurrentAdminTab();
+            const list = localData[currentAdminKey];
+
+            if (currentTab.isObjectArray) {
+                // Object Array: Filter by ID
+                localData[currentAdminKey] = list.filter(item => item.id !== id);
+            } else {
+                // Simple String Array: Filter by Index
+                const indexToDelete = parseInt(id);
+                if (!isNaN(indexToDelete) && indexToDelete >= 0 && indexToDelete < list.length) {
+                    localData[currentAdminKey].splice(indexToDelete, 1);
+                }
+            }
+            
+            saveWordsToLocal();
+            MessageBox.show("詞彙刪除成功！", false);
+            renderWordAdmin();
+        }
+        // --- Admin Panel End ---
+    </script>
+</body>
+</html>
