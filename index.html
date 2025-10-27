@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>英文學習遊戲樂園-1</title>
-    <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* 定義可愛的卡通字體，使用 Inter 搭配圓角和粗體營造童趣感 */
+        /* [Style definitions are preserved] */
         .game-font {
             font-family: 'Inter', sans-serif;
         }
-
-        /* 游標閃爍動畫 */
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
@@ -21,10 +18,8 @@
         .cursor {
             animation: blink 1s step-end infinite;
         }
-
-        /* 按鈕基礎樣式 */
         .key-btn {
-            height: 50px; /* Base height */
+            height: 50px;
             transition: all 0.1s;
             text-transform: uppercase;
         }
@@ -35,8 +30,6 @@
             box-shadow: 0 2px 0 0 #D1A3A3;
             transform: translateY(2px);
         }
-
-        /* Game 2: 記憶卡片 */
         .match-card-item {
             display: flex;
             align-items: center;
@@ -55,8 +48,6 @@
             color: #1E40AF !important;
             cursor: default;
         }
-
-        /* Game 4: Bingo */
         .bingo-grid {
             display: grid;
             gap: 4px;
@@ -90,8 +81,6 @@
                 font-size: 0.9rem;
             }
         }
-        
-        /* Game 5: 問句重組大師 */
         .word-block {
             display: inline-flex;
             align-items: center;
@@ -142,8 +131,6 @@
             75% { transform: translateX(-5px); }
             100% { transform: translateX(0); }
         }
-
-        /* Game 6, 7, 8: 配對與拖曳底座 */
         .image-target {
             min-height: 120px;
             background-color: #fff;
@@ -173,8 +160,6 @@
             min-height: 150px;
             padding: 10px;
         }
-        
-        /* Game 8 專用樣式 */
         .digraph-display-box {
             min-width: 150px;
             min-height: 100px;
@@ -188,7 +173,7 @@
         .digraph-letter-part {
             font-size: 4rem;
             font-weight: 900;
-            color: #1E40AF; /* 深藍色 */
+            color: #1E40AF;
         }
         .digraph-blank {
             width: 80px;
@@ -206,7 +191,7 @@
     </style>
 
     <script>
-        // 設定 Tailwind 配置, 使用柔和可愛的馬卡龍配色
+        // [Tailwind config is preserved]
         tailwind.config = {
             theme: {
                 extend: {
@@ -228,21 +213,17 @@
 </head>
 <body class="bg-background-light min-h-screen game-font flex flex-col items-center p-4">
 
-    <!-- 訊息提示框 -->
     <div id="message-box" class="fixed top-4 right-4 bg-red-500 text-white p-3 rounded-lg shadow-xl z-50 transition-opacity duration-300 hidden">
         <p id="message-content"></p>
     </div>
 
-    <!-- 頂部標題與導航 -->
     <header class="w-full max-w-6xl text-center mb-4 p-4 bg-primary-pink rounded-2xl shadow-lg border-b-4 border-pink-400">
         <h1 class="text-3xl md:text-5xl font-extrabold text-white tracking-wider">
-            <!-- 可愛小豬圖示 (SVG) -->
             <svg class="h-10 w-10 md:h-12 md:w-12 inline-block mr-3 transform -translate-y-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM15 9C15.8284 9 16.5 8.32843 16.5 = 7.5C16.5 6.67157 15.8284 6 15 6C14.1716 6 13.5 6.67157 13.5 7.5C13.5 8.32843 14.1716 9 15 9ZM9 9C9.82843 9 10.5 8.32843 10.5 7.5C10.5 6.67157 9.82843 6 9 6C8.17157 6 7.5 6.67157 7.5 7.5C7.5 8.32843 8.17157 9 9 9Z" fill="#FF8FAB"/><path d="M12 17C14.2091 17 16 15.2091 16 13C16 10.7909 14.2091 9 12 9C9.79086 9 8 10.7909 8 13C8 15.2091 9.79086 17 12 17Z" fill="#F0B5C2"/><circle cx="11" cy="13" r="1" fill="#FF8FAB"/><circle cx="13" cy="13" r="1" fill="#FF8FAB"/></svg>
-            英文遊戲樂園-1
+            英文學習遊戲樂園-1
         </h1>
     </header>
 
-    <!-- 導航列 -->
     <nav class="w-full max-w-6xl mb-6">
         <div class="grid grid-cols-4 gap-2 md:gap-4 justify-center">
             
@@ -258,7 +239,6 @@
         </div>
     </nav>
 
-    <!-- 主內容區 -->
     <main id="game-content" class="w-full max-w-6xl bg-white p-4 md:p-8 rounded-2xl shadow-xl border-4 border-secondary-blue flex flex-col space-y-6 min-h-[600px]">
         <div class="flex justify-center items-center h-full">
             <p class="text-xl text-gray-500">正在載入應用程式...</p>
@@ -271,9 +251,9 @@
         const LOCAL_STORAGE_KEY = 'GAMES_CUSTOM_DATA_V2';
         const G4_BINGO_SIZE = 4;
 
-        let currentGame = 'game2'; // 更改預設遊戲為 game2
-        let localData = {}; // 存放所有遊戲的自訂數據
-        let isGeneratingImage = false; // AI 圖片生成狀態旗標
+        let currentGame = 'game2'; 
+        let localData = {}; 
+        let isGeneratingImage = false; 
         
         // Hangman Emoji 提示庫
         const G3_EMOJI_HINTS = {
@@ -343,7 +323,7 @@
             g3_wrongGuesses: 0,
             g3_gameStatus: 'ready',
             g3_MAX_WRONG: 6,
-            g3_emojiHint: '', // 新增 Emoji 提示
+            g3_emojiHint: '', 
             // G4
             g4_players: [],
             g4_calledWords: new Set(),
@@ -361,8 +341,8 @@
             g6_sources: [],
             g6_matches: 0,
             // G7
-            g7_targets: [], // 主詞/動詞 (e.g. He is)
-            g7_sources: [], // 動作 (e.g. jumping)
+            g7_targets: [], 
+            g7_sources: [], 
             g7_matches: 0,
             // G8
             g8_currentWord: null,
@@ -610,7 +590,7 @@
             const parts = [];
             const color = status === 'won' ? '#3CB371' : (status === 'lost' ? '#FF4500' : '#4A5568'); 
             const strokeStyle = `stroke="${color}" stroke-width="6" stroke-linecap="round"`;
-            parts.push(`<line x1="50" y1="200" x2="150" y2="200" stroke="${color}" stroke-width="6"/>`); 
+            parts.push(`<line x1="50" y1="200" x2="150" y1="200" stroke="${color}" stroke-width="6"/>`); 
             parts.push(`<line x1="100" y1="200" x2="100" y2="20" stroke="${color}" stroke-width="6"/>`); 
             parts.push(`<line x1="100" y1="20" x2="160" y2="20" stroke="${color}" stroke-width="6"/>`); 
             parts.push(`<line x1="160" y1="20" x2="160" y2="40" stroke="${color}" stroke-width="3"/>`); 
@@ -1397,6 +1377,13 @@
         async function generateImageAndAddWord(key, wordPhrase, imageConcept) {
             if (isGeneratingImage) return;
 
+            // 🚨 詢問新的 API 金鑰，使用戶不必硬編碼金鑰
+            const apiKey = prompt("請輸入您的 Google AI API Key 以生成圖片：\n(此金鑰只會在本次會話中使用，不會被儲存到公開程式碼中)");
+            if (!apiKey || apiKey.trim() === "") {
+                MessageBox.show("圖片生成需要有效的 API Key。", true);
+                return;
+            }
+
             isGeneratingImage = true;
             
             // 確保按鈕狀態更新
@@ -1414,7 +1401,7 @@
                 parameters: { "sampleCount": 1 } 
             };
 
-            const apiKey = "AIzaSyBOmaItK4lWvAt7B20IMX-je59sClyHBWU";
+            // 使用用戶提供的 API Key
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
             let generatedUrl = '';
@@ -1431,8 +1418,10 @@
                 if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
                     const base64Data = result.predictions[0].bytesBase64Encoded;
                     generatedUrl = `data:image/png;base64,${base64Data}`;
+                } else if (result.error) {
+                    MessageBox.show(`AI 錯誤: ${result.error.message}. 請檢查金鑰是否有效。`, true);
                 } else {
-                    MessageBox.show("AI 圖片生成失敗，請檢查提示詞或 API 狀態。", true);
+                    MessageBox.show("AI 圖片生成失敗，請檢查提示詞或金鑰狀態。", true);
                 }
             } catch (error) {
                 console.error("Image generation API error:", error);
