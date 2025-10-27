@@ -929,7 +929,7 @@
         function checkCompletionG5() {
             if (state.g5_currentSort.some(item => item === null)) return;
             
-            // --- 偵錯修正: 使用詞塊序列比對 ---
+            // --- 修正後的比對邏輯 ---
             
             // 1. 取得目標（正規）的詞塊序列 (Tokens)
             const targetTokens = getSentenceTokens(state.g5_currentSentence).map(t => t.toUpperCase());
@@ -1674,3 +1674,4 @@
     </script>
 </body>
 </html>
+```eof
