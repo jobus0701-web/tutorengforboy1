@@ -26,7 +26,7 @@
         .key-btn {
             height: 50px; /* Base height */
             transition: all 0.1s;
-            text-transform: uppercase;
+            text-transform: none; /* 預設為小寫/正常 */
         }
         .shadow-cute {
             box-shadow: 0 4px 0 0 #D1A3A3;
@@ -35,6 +35,15 @@
             box-shadow: 0 2px 0 0 #D1A3A3;
             transform: translateY(2px);
         }
+        /* 特別針對按鈕元素中的文字強制使用小寫 (除非特別重寫) */
+        button.key-btn {
+            text-transform: lowercase;
+        }
+        /* 計算機按鍵維持原樣 */
+        .calc-key {
+            text-transform: none !important;
+        }
+
 
         /* Game 2: 記憶卡片 */
         .match-card-item {
@@ -86,14 +95,7 @@
             border: 2px solid #FFD700;
             transition: all 0.2s;
             height: 100%;
-            text-transform: uppercase;
-        }
-        .bingo-cell.marked {
-            background-color: #90EE90;
-            border-color: #3CB371;
-            color: white;
-            transform: scale(0.95);
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+            text-transform: lowercase; /* 賓果卡片預設為小寫 */
         }
         @media (min-width: 768px) {
             .bingo-cell {
@@ -118,18 +120,19 @@
             cursor: pointer;
             transition: all 0.15s;
             box-shadow: 0 3px 0 0 #D1A3A3;
+            text-transform: none; /* 詞塊將由 JS 處理大小寫 */
         }
-        .word-block.used {
-            opacity: 0.5;
-            cursor: default;
-            background-color: #F8F8F8;
-            border-color: #CCCCCC;
-            box-shadow: none;
+        
+        /* 修正 Game 5 答案區塊，確保詞塊間隔 (關鍵修正) */
+        .g5-answer-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px; /* 增加詞塊間的間隔 */
         }
         .answer-slot {
             min-width: 80px;
             height: 50px;
-            margin: 5px;
             padding: 5px;
             border: 3px dashed #BDE0FE;
             border-radius: 10px;
@@ -212,6 +215,47 @@
             font-size: 1.2rem;
             color: #D1A3A3;
         }
+        /* Game 7 Calculator Styles */
+        .calc-display {
+            background-color: #2c3e50; /* 深藍灰色 */
+            color: #ffffff;
+            text-align: right;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            font-size: 3rem;
+            font-weight: 700;
+            font-family: monospace;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .calc-key {
+            height: 60px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            transition: all 0.1s;
+        }
+        .calc-key-number {
+            background-color: #ecf0f1; /* 淺灰色 */
+            color: #2c3e50;
+        }
+        .calc-key-operator {
+            background-color: #f39c12; /* 橘色 */
+            color: white;
+        }
+        .calc-key-clear {
+            background-color: #e74c3c; /* 紅色 */
+            color: white;
+        }
+        .calc-key-equal {
+            background-color: #2ecc71; /* 綠色 */
+            color: white;
+        }
+        /* Game 6 物品名稱和 Game 7 提示欄強制小寫 */
+        .item-name-display {
+            text-transform: lowercase;
+        }
 
     </style>
 
@@ -247,24 +291,24 @@
     <header class="w-full max-w-6xl text-center mb-4 p-4 bg-primary-pink rounded-2xl shadow-lg border-b-4 border-pink-400">
         <h1 class="text-3xl md:text-5xl font-extrabold text-white tracking-wider">
             <!-- 可愛小豬圖示 (SVG) -->
-            <svg class="h-10 w-10 md:h-12 md:w-12 inline-block mr-3 transform -translate-y-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM15 9C15.8284 9 16.5 8.32843 16.5 = 7.5C16.5 6.67157 15.8284 6 15 6C14.1716 6 13.5 6.67157 13.5 7.5C13.5 8.32843 14.1716 9 15 9ZM9 9C9.82843 9 10.5 8.32843 10.5 7.5C10.5 6.67157 9.82843 6 9 6C8.17157 6 7.5 6.67157 7.5 7.5C7.5 8.32843 8.17157 9 9 9Z" fill="#FF8FAB"/><path d="M12 17C14.2091 17 16 15.2091 16 13C16 10.7909 14.2091 9 12 9C9.79086 9 8 10.7909 8 13C8 15.2091 9.79086 17 12 17Z" fill="#F0B5C2"/><circle cx="11" cy="13" r="1" fill="#FF8FAB"/><circle cx="13" cy="13" r="1" fill="#FF8FAB"/></svg>
+            <svg class="h-10 w-10 md:h-12 md:w-12 inline-block mr-3 transform -translate-y-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM15 9C15.8284 9 16.5 8.32843 16.5 = 7.5C16.5 6.67157 15.8284 6 15 6C14.1716 6 13.5 6.67157 13.5 7.5C13.5 8.32843 14.1716 9 15 9ZM9 9C9.82843 9 10.5 8.32843 10.5 7.5C10.5 6.67157 9.82843 6 9 6C8.17157 6 7.5 6.67157 7.5 7.5C7.5 8.32843 8.1716 9 9 9Z" fill="#FF8FAB"/><path d="M12 17C14.2091 17 16 15.2091 16 13C16 10.7909 14.2091 9 12 9C9.79086 9 8 10.7909 8 13C8 15.2091 9.79086 17 12 17Z" fill="#F0B5C2"/><circle cx="11" cy="13" r="1" fill="#FF8FAB"/><circle cx="13" cy="13" r="1" fill="#FF8FAB"/></svg>
             英文學習遊戲樂園-1
         </h1>
     </header>
 
     <!-- 導航列 -->
     <nav class="w-full max-w-6xl mb-6">
-        <div class="grid grid-cols-4 gap-2 md:gap-4 justify-center">
+        <div class="grid grid-cols-4 gap-2 md:gap-4 justify-center" id="game-nav">
             
-            <button data-game="game2" onclick="changeGame('game2')" class="tab-btn">🎶 配對</button>
-            <button data-game="game3" onclick="changeGame('game3')" class="tab-btn">🖍️ Hangman</button>
-            <button data-game="game4" onclick="changeGame('game4')" class="tab-btn">🎤 賓果</button>
-            <button data-game="game5" onclick="changeGame('game5')" class="tab-btn">💬 問句</button>
+            <button data-game="game2" class="tab-btn">🎶 配對</button>
+            <button data-game="game3" class="tab-btn">🖍️ Hangman</button>
+            <button data-game="game4" class="tab-btn">🎤 賓果</button>
+            <button data-game="game5" class="tab-btn">💬 問句</button>
             
-            <button data-game="game6" onclick="changeGame('game6')" class="tab-btn">🤸 日常</button>
-            <button data-game="game7" onclick="changeGame('game7')" class="tab-btn">🏃 動詞</button>
-            <button data-game="game8" onclick="changeGame('game8')" class="tab-btn">💥 發音機</button>
-            <button data-game="admin" onclick="changeGame('admin')" class="tab-btn">⚙️ 後台</button>
+            <button data-game="game6" class="tab-btn">🤸 日常</button>
+            <button data-game="game7" class="tab-btn">💰 花費計算機</button>
+            <button data-game="game8" class="tab-btn">💥 發音機</button>
+            <button data-game="admin" class="tab-btn">⚙️ 後台</button>
         </div>
     </nav>
 
@@ -293,10 +337,22 @@
 
         // 新增：常用動詞和日常活動的 Emoji 映射表
         const ACTION_EMOJI_MAP = {
+            // 基礎動詞 (新增)
+            'RUN': '🏃', 'TALK': '🗣️', 'REST': '🛌', 'EAT': '🍔', 'LISTEN': '🎧', 
+            'PAINT': '🎨', 'JUMP': '🤸', 'WALK': '🚶', 'JOG': '🏃', 'SKIP': '縄',
+
+            // 片語關鍵字
             'WASH': '🚿', 'FACE': '🙂', 'TEETH': '🦷', 'BRUSH': '🖌️', 'HAIR': '💇', 
-            'DO': '✅', 'HOMEWORK': '📚', 'PLAY': '🎮', 'PHONE': '📱', 'JUMPING': '🤸',
-            'PAINTING': '🎨', 'SKIPPING': '縄', 'JOGGING': '🏃', 'IS': '👉', 'HE': '👦', 'SHE': '👧'
+            'DO': '✅', 'HOMEWORK': '📚', 'PLAY': '🎮', 'PHONE': '📱', 'IS': '👉', 
+            
+            // 人稱代詞
+            'I': '🙋', 'YOU': '👤', 'HE': '👦', 'SHE': '👧', 'IT': '🐶', 'WE': '👥', 'THEY': '👫' 
         };
+        
+        // Present Continuous 主詞-Be動詞組合
+        const G7_SUBJECT_FORMS = [
+            'I AM', 'YOU ARE', 'HE IS', 'SHE IS', 'IT IS', 'WE ARE', 'THEY ARE'
+        ];
 
 
         // 預設單字庫 (Phonics 2, STEP 3 詞彙)
@@ -330,12 +386,12 @@
                 { id: crypto.randomUUID(), word: 'BRUSH HIS TEETH', emoji: '👦🦷', url: 'https://placehold.co/150x120/9ccc65/000000?text=BRUSH%20TEETH' },
                 { id: crypto.randomUUID(), word: 'PLAY ON HIS PHONE', emoji: '🎮📱', url: 'https://placehold.co/150x120/ab47bc/ffffff?text=PLAY%20PHONE' },
             ],
-            // Game 7: 🏃 動詞連連看 (Verb: Image_Concept for Present Continuous) - 使用隨機 Emoji 和 Placeholder URL
+            // Game 7: 🏃 動詞連連看 (Verb: Full Sentence, e.g. I AM JUMPING) - 數據已無用，但保留結構
             g7_verbs: [
-                { id: crypto.randomUUID(), verb: 'IS JUMPING', emoji: '🤸', url: 'https://placehold.co/150x120/5c6bc0/ffffff?text=JUMPING' },
-                { id: crypto.randomUUID(), verb: 'IS PAINTING', emoji: '🎨', url: 'https://placehold.co/150x120/ef5350/ffffff?text=PAINTING' },
-                { id: crypto.randomUUID(), verb: 'IS SKIPPING', emoji: '縄', url: 'https://placehold.co/150x120/64b5f6/000000?text=SKIPPING' },
-                { id: crypto.randomUUID(), verb: 'IS JOGGING', emoji: '🏃', url: 'https://placehold.co/150x120/4db6ac/000000?text=JOGGING' },
+                { id: crypto.randomUUID(), fullSentence: 'I AM JUMPING', emoji: '🙋🤸', url: 'https://placehold.co/150x120/5c6bc0/ffffff?text=JUMPING' },
+                { id: crypto.randomUUID(), fullSentence: 'HE IS PAINTING', emoji: '👦🎨', url: 'https://placehold.co/150x120/ef5350/ffffff?text=PAINTING' },
+                { id: crypto.randomUUID(), fullSentence: 'THEY ARE TALKING', emoji: '👫🗣️', url: 'https://placehold.co/150x120/4db6ac/000000?text=TALKING' },
+                { id: crypto.randomUUID(), fullSentence: 'WE ARE EATING', emoji: '👥🍔', url: 'https://placehold.co/150x120/f9a825/000000?text=EATING' },
             ],
             // Game 8: 💥 神奇發音機 (Digraph: Word_Template)
             g8_digraphs: [
@@ -356,13 +412,13 @@
 
             tokens.forEach(token => {
                 let found = false;
-                // 優先匹配完整的詞彙 (如 JUMPING)
+                // 優先匹配完整的詞彙
                 if (ACTION_EMOJI_MAP[token]) {
                     generatedEmoji += ACTION_EMOJI_MAP[token];
                     found = true;
                 }
                 
-                // 如果是 IS JUMPING 這樣的組合，嘗試匹配核心動詞 (JUMPING)
+                // 嘗試匹配核心動詞 (移除 ING)
                 if (!found && token.endsWith('ING')) {
                     const baseVerb = token.slice(0, -3);
                     if (ACTION_EMOJI_MAP[baseVerb]) {
@@ -373,10 +429,8 @@
 
                 // 嘗試匹配詞彙中的關鍵字 (如 FACE, HAIR)
                 for (const key in ACTION_EMOJI_MAP) {
-                    if (token.includes(key) && key.length > 2) {
-                        if (!generatedEmoji.includes(ACTION_EMOJI_MAP[key])) {
-                            generatedEmoji += ACTION_EMOJI_MAP[key];
-                        }
+                    if (token.includes(key) && key.length > 2 && !generatedEmoji.includes(ACTION_EMOJI_MAP[key])) {
+                        generatedEmoji += ACTION_EMOJI_MAP[key];
                         found = true;
                     }
                 }
@@ -390,6 +444,86 @@
             
             return generatedEmoji.trim();
         }
+        
+        // --- 句式大小寫格式化工具 (修正後版本) ---
+        function formatDisplayWord(word, isSentenceStart = false) {
+            if (typeof word !== 'string') return word;
+            if (word.length === 0) return word;
+
+            // 1. 檢查是否需要保持原樣大寫 (Caps Lock 強調)
+            const hasUpperCase = /[A-Z]/.test(word);
+            
+            if (hasUpperCase) {
+                // 如果原始單詞包含大寫（無論是不是全大寫），則保持原始輸入
+                return word;
+            }
+            
+            // 2. 特殊單字檢查 (I 永遠大寫)
+            if (word.toUpperCase() === 'I') {
+                return 'I';
+            }
+            
+            // 3. 句首檢查 (僅當它不是句首的標點符號時)
+            if (isSentenceStart && word.match(/^[a-z]/i)) {
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            }
+
+            // 4. 預設轉換為全小寫
+            return word.toLowerCase();
+        }
+        
+        // --- 提取動詞進行式 (新的輔助函數) ---
+        function extractVerbParticiple(fullSentence) {
+            const parts = fullSentence.split(' ').map(p => p.trim());
+            if (parts.length > 0 && parts[parts.length - 1].endsWith('ING')) {
+                return parts[parts.length - 1]; // 返回句子的最後一個詞，假設是動詞 ing 形式
+            }
+            return null;
+        }
+
+        // --- 數字轉英文單字功能 (Game 7 核心) ---
+        const ONES = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
+        const TEENS = ['TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN'];
+        const TENS = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY'];
+        
+        function numberToWords(num) {
+            if (num < 0 || num > 999999) return "NUMBER OUT OF RANGE";
+            if (num === 0) return "ZERO";
+
+            function convertLessThanThousand(n) {
+                let s = '';
+                if (n >= 100) {
+                    s += ONES[Math.floor(n / 100)] + ' HUNDRED';
+                    n %= 100;
+                    if (n > 0) s += ' '; // 簡化，用空格連接
+                }
+                if (n >= 10 && n <= 19) {
+                    s += TEENS[n - 10];
+                } else if (n >= 20) {
+                    s += TENS[Math.floor(n / 10)];
+                    n %= 10;
+                    if (n > 0) s += '-';
+                }
+                if (n > 0 && n < 10) {
+                    s += ONES[n];
+                }
+                return s.trim().replace(/\s+/g, ' '); // 移除多餘空格
+            }
+
+            // 由於目標是百位數 (最大 999)，我們只用這個函數即可
+            return convertLessThanThousand(num).replace('AND', ''); // 移除 'AND'
+        }
+        
+        // 隨機物品和價格列表 (基於 STEP 3 教材)
+        const SHOP_ITEMS = [
+            { name: "SKATEBOARD", emoji: "🛹", maxPrice: 200 }, // 單品金額不超過 200
+            { name: "PUPPET", emoji: "🧸", maxPrice: 200 },
+            { name: "ACTION FIGURE", emoji: "🦸", maxPrice: 200 },
+            { name: "MODEL PLANE", emoji: "✈️", maxPrice: 200 },
+            { name: "BARBIE DOLL", emoji: "👸", maxPrice: 200 },
+            { name: "BACKPACK", emoji: "🎒", maxPrice: 200 },
+        ];
+
 
         // --- 遊戲狀態管理 ---
         let state = {
@@ -403,8 +537,18 @@
             g5_currentSentence: '', g5_answerWords: [], g5_scrambleBlocks: [], g5_currentSort: [], g5_gameStatus: 'ready',
             // G6
             g6_targets: [], g6_sources: [], g6_matches: 0,
-            // G7
-            g7_targets: [], g7_sources: [], g7_matches: 0,
+            // G7 (Cost Calculator)
+            g7_items: [],
+            g7_totalCost: 0,
+            g7_displayValue: '', // 用於題目答案輸入
+            g7_calculator: { // 模擬計算機的內部狀態
+                currentValue: '0',
+                memory: 0,
+                operator: null,
+                resetDisplay: true,
+                calcDisplay: '0'
+            },
+            g7_gameStatus: 'ready',
             // G8
             g8_currentWord: null, g8_gameStatus: 'ready', g8_score: 0,
         };
@@ -517,7 +661,7 @@
                 case 'game4': initGame4(); break;
                 case 'game5': initGame5(); break;
                 case 'game6': initGame6(); break;
-                case 'game7': initGame7(); break;
+                case 'game7': initGame7(); break; // 修改為呼叫 initGame7
                 case 'game8': initGame8(); break;
                 case 'admin': renderWordAdmin(); break;
                 default: document.getElementById('game-content').innerHTML = `<p class="text-xl text-gray-500 text-center p-10">請選擇一個遊戲</p>`;
@@ -528,7 +672,14 @@
             // 替換導航按鈕樣式
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.add('bg-white', 'hover:bg-secondary-blue', 'py-2', 'px-3', 'md:px-4', 'rounded-full', 'text-xs', 'md:text-sm', 'font-bold', 'text-gray-700', 'transition', 'duration-300', 'shadow-md');
+                
+                // 修正: 將點擊事件從 onclick 移至 addEventListener
+                const gameName = btn.getAttribute('data-game');
+                if (gameName) {
+                    btn.addEventListener('click', () => changeGame(gameName));
+                }
             });
+
             setTabActive(currentGame);
             renderApp();
         }
@@ -606,15 +757,15 @@
                 let content = '';
                 let innerTextClass = `text-lg md:text-2xl font-extrabold text-gray-800`;
                 let openCardColorClass = card.type === 'PHONICS' ? 'card-type-phonics' : 'card-type-word';
-                let hiddenCardContent = card.type === 'PHONICS' ? 'PHONICS' : 'WORD';
+                let hiddenCardContent = card.type === 'PHONICS' ? 'phonics' : 'word'; // 保持小寫
 
 
                 if (card.matched) {
                     cardClasses += ` matched-success`;
-                    content = `${card.phonics} / ${card.value}`;
+                    content = `${formatDisplayWord(card.phonics)} / ${formatDisplayWord(card.value)}`; // 輸出格式化
                 } else if (card.flipped) {
                     cardClasses += ` ${openCardColorClass} border-gray-500`;
-                    content = card.type === 'PHONICS' ? `[${card.value}]` : card.value;
+                    content = card.type === 'PHONICS' ? `[${formatDisplayWord(card.value)}]` : formatDisplayWord(card.value); // 輸出格式化
                 } else {
                     cardClasses += ` bg-primary-pink border-pink-400`; // 牌面朝下時使用主題粉色
                     content = hiddenCardContent; // 顯示卡片類型
@@ -622,7 +773,7 @@
                 }
 
                 return `
-                    <div class="h-24 md:h-32 rounded-xl" onclick="handleCardClickG2('${card.id}')">
+                    <div class="h-24 md:h-32 rounded-xl" data-card-id="${card.id}">
                         <div class="${cardClasses}">
                             <div class="text-center">
                                 <span class="${innerTextClass}">
@@ -634,10 +785,17 @@
                     </div>
                 `;
             }).join('');
+            
+            // 重新綁定點擊事件
+            setTimeout(() => {
+                document.querySelectorAll('#match-game-grid [data-card-id]').forEach(elem => {
+                    elem.addEventListener('click', () => handleCardClickG2(elem.dataset.cardId));
+                });
+            }, 0);
 
             container.innerHTML = `
                 <section class="w-full bg-accent-yellow p-4 rounded-xl shadow-inner border-b-8 border-yellow-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-yellow-900 mb-4 text-center">🎶 Phonics 發音配對 (Vowel Sound Match)</h2>
+                    <h2 class="text-xl md:text-3xl font-bold text-yellow-900 mb-4 text-center">🎶 phonics 發音配對 (vowel sound match)</h2>
                     <p class="text-center text-sm mb-4">目標: 點擊卡片，配對相同的長母音組合和對應的單字。已完成 ${state.g2_matchCount}/${state.g2_matchCards.length / 2} 組。</p>
                     <div id="match-game-grid" class="grid grid-cols-4 gap-3 md:gap-4 max-w-2xl mx-auto">
                         ${cardsHtml}
@@ -714,7 +872,7 @@
 
         function initGame3() {
             const source = localData.g3_words;
-            if (source.length === 0) { MessageBox.show("請在後台新增 Hangman 單字！", true); return; }
+            if (source.length === 0) { MessageBox.show("請在後台新增 hangman 單字！", true); return; }
 
             const randomWord = source[Math.floor(Math.random() * source.length)];
             state.g3_currentGuessWord = randomWord.toUpperCase(); 
@@ -741,22 +899,25 @@
 
             if (guessedCorrectly) {
                 state.g3_gameStatus = 'won';
-                MessageBox.show(`恭喜您！單字是 ${state.g3_currentGuessWord}！🎉`, false);
+                MessageBox.show(`恭喜您！單字是 ${state.g3_currentGuessWord.toLowerCase()}！🎉`, false);
             } else if (state.g3_wrongGuesses >= state.g3_MAX_WRONG) {
                 state.g3_gameStatus = 'lost';
-                MessageBox.show(`很可惜。正確單字是 ${state.g3_currentGuessWord}。😭`, true);
+                MessageBox.show(`很可惜。正確單字是 ${state.g3_currentGuessWord.toLowerCase()}。😭`, true);
             }
         }
 
         function renderGame3() {
             const container = document.getElementById('game-content');
             if (currentGame !== 'game3') return;
+            
+            // 應用格式化：單字保持後台儲存的大小寫（但因為是 Hangman，通常會是全大寫）
+            const formattedWord = state.g3_currentGuessWord;
 
-            const displayWord = state.g3_currentGuessWord.split('').map(char => {
+            const displayWord = formattedWord.split('').map(char => {
                 if (char === ' ') return '&nbsp;&nbsp;'; 
                 const isGameOver = state.g3_gameStatus === 'won' || state.g3_gameStatus === 'lost';
                 if (state.g3_guessedLetters.has(char) || isGameOver) {
-                    return char.toLowerCase(); 
+                    return formatDisplayWord(char); 
                 }
                 return '_';
             }).join(' ');
@@ -779,7 +940,7 @@
             
             container.innerHTML = `
                 <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">🖍️ Hangman 猜單字 (Word Guess)</h2>
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">🖍️ hangman 猜單字 (word guess)</h2>
                 </section>
                 <div class="flex flex-col md:flex-row gap-6">
                     <div class="flex-1 p-4 bg-white rounded-xl shadow-md border-2 border-gray-200 flex flex-col items-center">
@@ -867,7 +1028,7 @@
             state.g4_gameStatus = 'calling';
             renderGame4(); 
             
-            await callTTS(nextWord); 
+            await callTTS(nextWord); // 恢復 Game 4 聲音
             
             state.g4_isCalling = false; 
 
@@ -905,7 +1066,7 @@
                 }
                 renderGame4();
             } else {
-                MessageBox.show(`單字 ${word} 尚未被唸出！`, true);
+                MessageBox.show(`單字 ${word.toLowerCase()} 尚未被唸出！`, true);
             }
         }
 
@@ -916,25 +1077,25 @@
             const renderCard = (player) => {
                 const cellsHtml = player.card.map((word, index) => {
                     const isMarked = player.marked.has(word);
-                    return `<div class="bingo-cell ${isMarked ? 'marked' : 'hover:bg-yellow-300'}" onclick="handleCardClickG4(${player.id}, ${index})">${word}</div>`;
+                    return `<div class="bingo-cell ${isMarked ? 'marked' : 'hover:bg-yellow-300'}" data-player-id="${player.id}" data-index="${index}">${formatDisplayWord(word)}</div>`;
                 }).join('');
 
                 return `
                     <div class="flex-1 min-w-0 p-3 rounded-xl shadow-lg border-4 ${player.winner ? 'border-green-600 bg-green-100' : 'border-secondary-blue bg-white'}">
-                        <h3 class="text-xl font-bold text-center mb-3 ${player.winner ? 'text-green-700' : 'text-blue-800'}">${player.name} ${player.winner ? '🎉 WINNER 🎉' : ''} (線數: ${player.score})</h3>
-                        <div class="bingo-grid mx-auto" style="grid-template-columns: repeat(${G4_BINGO_SIZE}, 1fr); grid-template-rows: repeat(${G4_BINGO_SIZE}, 1fr); max-width: 300px;">
+                        <h3 class="text-xl font-bold text-center mb-3 ${player.winner ? 'text-green-700' : 'text-blue-800'}">${player.name} ${player.winner ? '🎉 winner 🎉' : ''} (線數: ${player.score})</h3>
+                        <div class="bingo-grid mx-auto" style="grid-template-columns: repeat(${G4_BINGO_SIZE}, 1fr); grid-template-rows: repeat(${G4_BINGO_SIZE}, 1fr); max-w-full md:max-w-[300px];" id="bingo-grid-${player.id}">
                             ${cellsHtml}
                         </div>
                     </div>
                 `;
             };
-
+            
             const controlArea = `
                 <div class="text-center p-4 bg-keyboard-bg rounded-xl shadow-lg border-b-8 border-accent-yellow mb-6">
                     <h3 class="text-2xl font-bold text-gray-800 mb-3">${state.g4_gameStatus === 'ready' ? '準備開始' : state.g4_gameStatus === 'calling' ? '遊戲中' : '遊戲結束'}</h3>
                     <div class="mb-4 h-12 flex items-center justify-center">
-                        <p class="text-4xl font-black text-red-700 transition duration-300">
-                            ${state.g4_lastCalledWord ? `單字: ${state.g4_lastCalledWord}` : state.g4_gameStatus === 'ready' ? '點擊開始按鈕' : '等待下一輪...'}
+                        <p class="text-4xl font-black text-red-700 transition duration-300 item-name-display">
+                            ${state.g4_lastCalledWord ? `單字: ${formatDisplayWord(state.g4_lastCalledWord)}` : state.g4_gameStatus === 'ready' ? '點擊開始按鈕' : '等待下一輪...'}
                         </p>
                     </div>
                     <button onclick="startCallingG4()" 
@@ -949,7 +1110,7 @@
 
             container.innerHTML = `
                 <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-4 text-center">🎤 雙人英文賓果 (Two-Player Bingo)</h2>
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-4 text-center">🎤 雙人英文賓果 (two-player bingo)</h2>
                     <p class="text-center text-sm text-blue-900 mb-6">目標: 聽取單字，並在您的 4x4 賓果卡上標記。最先完成兩條線獲勝！</p>
                     ${controlArea}
                     <div class="flex flex-col md:flex-row gap-6">
@@ -958,6 +1119,14 @@
                     </div>
                 </section>
             `;
+             // 重新綁定事件監聽器
+            setTimeout(() => {
+                document.querySelectorAll('.bingo-cell').forEach(cell => {
+                    const playerId = parseInt(cell.dataset.playerId);
+                    const index = parseInt(cell.dataset.index);
+                    cell.addEventListener('click', () => handleCardClickG4(playerId, index));
+                });
+            }, 0);
         }
         // --- Game 4 End ---
 
@@ -967,11 +1136,28 @@
             return sentence.match(/\b\w+'?\w*\b|[.,?!]/g) || [];
         }
 
+        function capitalizeSentence(word) {
+            if (word === 'I') return 'I';
+            // 將 I, He, She, They, We, You, It 的首字母大寫
+            const personalPronouns = ["I", "HE", "SHE", "YOU", "WE", "THEY", "IT"];
+            
+            if (personalPronouns.includes(word)) {
+                 if (word === 'I') return 'I'; // 確保 I 保持大寫
+                 return word.charAt(0) + word.slice(1).toLowerCase();
+            }
+
+            // 句首單字：首字母大寫，其餘小寫
+            if (word.length > 0) {
+                 return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            }
+            return word.toLowerCase();
+        }
+
         function shuffleWordsG5(sentence) {
             const words = getSentenceTokens(sentence);
             
             // 複製一份用於打亂，並加入 ID
-            const scrambleArray = words.map(word => ({ id: crypto.randomUUID(), value: word.toUpperCase(), isUsed: false }));
+            const scrambleArray = words.map(word => ({ id: crypto.randomUUID(), value: word, isUsed: false })); // 不強制大寫
             
             // 僅打亂單字和標點符號的順序
             for (let i = scrambleArray.length - 1; i > 0; i--) {
@@ -1073,27 +1259,43 @@
 
             const targetBoxesHtml = state.g5_currentSort.map((item, index) => {
                 const isFilled = item !== null;
-                const displayWord = isFilled ? item.value : '（點擊詞塊填入）';
+                let displayWord = '（點擊詞塊填入）';
+                
+                if (isFilled) {
+                     // 應用大小寫規則
+                    displayWord = formatDisplayWord(item.value, index === 0);
+                }
                 
                 return `
                     <div class="answer-slot ${isFilled ? 'filled bg-green-200 border-green-400' : ''}"
-                         onclick="handleResetTargetG5(${index})">
+                         data-index="${index}">
                         ${displayWord}
                     </div>
                 `;
             }).join('');
 
             const letterBlocksHtml = state.g5_scrambleBlocks.map(wordBlock => `
-                <button onclick="handleWordClickG5('${wordBlock.id}')"
+                <button data-id="${wordBlock.id}"
                         class="word-block ${wordBlock.isUsed ? 'used' : 'hover:bg-yellow-300'}"
                         ${wordBlock.isUsed || state.g5_gameStatus !== 'playing' ? 'disabled' : ''}>
-                    ${wordBlock.value}
+                    ${formatDisplayWord(wordBlock.value)}
                 </button>
             `).join('');
+            
+            // 重新綁定事件監聽器
+            setTimeout(() => {
+                document.querySelectorAll('.word-block').forEach(btn => {
+                    btn.addEventListener('click', () => handleWordClickG5(btn.dataset.id));
+                });
+                document.querySelectorAll('.answer-slot').forEach(slot => {
+                    slot.addEventListener('click', () => handleResetTargetG5(parseInt(slot.dataset.index)));
+                });
+            }, 0);
+
 
             container.innerHTML = `
                 <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">💬 問句重組大師 (Sentence Scramble Master)</h2>
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">💬 問句重組大師 (sentence scramble master)</h2>
                     <p class="text-center text-sm text-blue-900 mb-4">💡 點擊詞塊，重組句子的正確順序！</p>
                 </section>
                 
@@ -1107,7 +1309,7 @@
 
                     <div class="text-center mb-6 p-4 bg-white rounded-xl shadow-inner border-4 border-gray-300 w-full">
                         <h3 class="text-lg font-semibold text-gray-700 mb-2">答案區 (點擊已填入詞塊可移除)</h3>
-                        <div class="flex flex-wrap justify-center">
+                        <div class="g5-answer-display">
                             ${targetBoxesHtml}
                         </div>
                     </div>
@@ -1219,18 +1421,18 @@
                          data-word="${t.word}" 
                          class="image-target ${isMatched ? 'border-green-600 bg-green-100' : 'border-primary-pink'} p-2">
                         <p class="text-5xl mb-2">${t.emoji}</p>
-                        ${isMatched ? `<p class="text-lg font-bold text-green-700 mt-1">${t.word}</p>` : ''}
+                        ${isMatched ? `<p class="text-lg font-bold text-green-700 item-name-display">${formatDisplayWord(t.word)}</p>` : ''}
                     </div>
                 `;
             }).join('');
 
             const sourcesHtml = state.g6_sources.map(s => `
-                <button draggable="true" data-word="${s.word}" class="drag-source key-btn bg-accent-yellow hover:bg-yellow-400 text-gray-800 font-bold py-2 px-4 rounded-xl text-sm md:text-base">${s.word}</button>
+                <button draggable="true" data-word="${s.word}" class="drag-source key-btn bg-accent-yellow hover:bg-yellow-400 text-gray-800 font-bold py-2 px-4 rounded-xl text-sm md:text-base">${formatDisplayWord(s.word)}</button>
             `).join('');
 
             container.innerHTML = `
                 <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">🤸 日常活動圖像配對 (Daily Routine Image Match)</h2>
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">🤸 日常活動圖像配對 (daily routine image match)</h2>
                     <p class="text-center text-sm text-blue-900 mb-4">目標: 將下方的單字卡拖曳到上方對應的日常活動圖片上。</p>
                 </section>
                 
@@ -1256,135 +1458,293 @@
         }
         // --- Game 6 End ---
 
-        // --- Game 7: 🏃 動詞連連看 (Action Verb Connector) ---
+        // --- Game 7: 🏃 花費計算機 (Cost Calculator) ---
+        
+        // ------------------ 計算機核心邏輯 -------------------
+        function performCalculation(num1, num2, operator) {
+            // 確保操作數為浮點數，以處理除法和小數點
+            num1 = parseFloat(num1);
+            num2 = parseFloat(num2);
+
+            if (isNaN(num1) || isNaN(num2)) return 0;
+
+            switch (operator) {
+                case '+': return num1 + num2;
+                case '-': return num1 - num2;
+                case 'x': return num1 * num2;
+                case '/': 
+                    if (num2 === 0) {
+                        MessageBox.show("除數不能為零！", true);
+                        return num1; // 保持原樣
+                    }
+                    return num1 / num2;
+                default: return num2;
+            }
+        }
+
+        function handleCalcKey(key) {
+            let calc = state.g7_calculator;
+            let current = calc.currentValue;
+
+            if (key >= '0' && key <= '9') {
+                if (calc.resetDisplay) {
+                    current = key;
+                    calc.resetDisplay = false;
+                } else if (calc.currentValue.length < 10) { // 限制顯示長度
+                    current = current === '0' ? key : current + key;
+                }
+                calc.currentValue = current;
+                calc.calcDisplay = current;
+
+            } else if (key === '.') {
+                if (!calc.currentValue.includes('.') && !calc.resetDisplay) {
+                    calc.currentValue += '.';
+                    calc.calcDisplay = calc.currentValue;
+                }
+            } else if (key === 'C') {
+                calc.currentValue = '0';
+                calc.memory = 0;
+                calc.operator = null;
+                calc.resetDisplay = true;
+                calc.calcDisplay = '0';
+            } else if (key === 'DEL') {
+                 if (calc.currentValue.length > 1) {
+                    calc.currentValue = calc.currentValue.slice(0, -1);
+                } else {
+                    calc.currentValue = '0';
+                }
+                calc.calcDisplay = calc.currentValue;
+                calc.resetDisplay = false;
+
+            } else if (['+', '-', 'x', '/'].includes(key)) {
+                if (calc.operator !== null && !calc.resetDisplay) {
+                    // 如果連續按下運算符，先計算前一個
+                    calc.memory = performCalculation(calc.memory, parseFloat(calc.currentValue), calc.operator);
+                } else if (calc.operator === null) {
+                    calc.memory = parseFloat(calc.currentValue);
+                }
+                calc.operator = key;
+                calc.resetDisplay = true;
+                calc.currentValue = calc.memory.toString(); // 更新 currentV 以便下次使用
+                calc.calcDisplay = calc.currentValue;
+            } else if (key === '=') {
+                if (calc.operator !== null) {
+                    calc.memory = performCalculation(calc.memory, parseFloat(calc.currentValue), calc.operator);
+                    calc.currentValue = calc.memory.toString();
+                    calc.operator = null; // 重置運算符
+                    calc.resetDisplay = true;
+                    calc.calcDisplay = calc.currentValue;
+                }
+            } else if (key === 'R') { // 唸出金額按鈕
+                 const numToRead = parseInt(current);
+                 if (!isNaN(numToRead) && numToRead > 0) {
+                    const wordResult = numberToWords(numToRead) + " dollars";
+                    MessageBox.show(`朗讀金額: ${wordResult}`, false);
+                    // 不執行 callTTS
+                 } else {
+                     MessageBox.show("請先輸入金額！", true);
+                 }
+                 state.g7_calculator = calc;
+                 renderGame7();
+                 return;
+            }
+            
+            // 更新狀態並渲染
+            state.g7_calculator = calc;
+            renderGame7();
+        }
+        
+        // ------------------ 遊戲初始化與檢查 -------------------
+
         function initGame7() {
-            const source = localData.g7_verbs;
-            if (source.length < 3) { MessageBox.show("請在後台新增至少 3 個動詞連連看詞彙！", true); return; }
-
-            const pairs = shuffleArray(source).slice(0, 3);
+            // 1. 隨機選擇 2 到 3 個物品
+            const numItems = Math.floor(Math.random() * 2) + 2; // 2 或 3
+            const shuffledItems = shuffleArray(SHOP_ITEMS).slice(0, numItems);
             
-            // 左側：主詞 (He/She) - 隨機
-            state.g7_targets = pairs.map(p => ({ 
-                ...p, 
-                id: crypto.randomUUID(), 
-                subject: Math.random() < 0.5 ? 'HE IS' : 'SHE IS', 
-                matched: false 
-            })); 
+            let total = 0;
+            const items = shuffledItems.map(item => {
+                // 價格在 $1 到 $200 之間 (符合新要求)
+                const price = Math.floor(Math.random() * item.maxPrice) + 1; 
+                total += price;
+                return { ...item, price };
+            });
             
-            // 右側：動作 (Verb) - 打亂
-            state.g7_sources = shuffleArray(pairs.map(p => ({ id: crypto.randomUUID(), verb: p.verb, isMatched: false }))); 
+            // 確保總金額不超過 999 (理論上最大為 3 * 200 = 600)
             
-            state.g7_matches = 0;
-            state.g7_selectedSource = null; // 點擊選中的動詞
-
+            state.g7_items = items;
+            state.g7_totalCost = total;
+            state.g7_displayValue = ''; // 用於題目答案輸入
+            
+            state.g7_calculator = { // 重置計算機
+                currentValue: '0',
+                memory: 0,
+                operator: null,
+                resetDisplay: true,
+                calcDisplay: '0'
+            };
+            
+            state.g7_gameStatus = 'entering'; 
             renderGame7();
         }
 
-        async function handleSourceClickG7(verb) {
-            if (state.g7_matches === state.g7_targets.length) return;
-            state.g7_selectedSource = verb;
-            // 移除 callTTS(verb);
-            renderGame7();
-        }
 
-        async function handleTargetClickG7(targetId) {
-            if (!state.g7_selectedSource) {
-                MessageBox.show('請先點擊一個動詞！', true);
+        function checkAnswerG7() {
+            if (state.g7_gameStatus !== 'entering') return;
+            
+            // 題目答案輸入框的值
+            const enteredValue = parseInt(state.g7_displayValue);
+            const expectedValue = state.g7_totalCost;
+
+            if (isNaN(enteredValue) || enteredValue < 1) {
+                MessageBox.show("請輸入您計算出的總金額！", true);
                 return;
             }
-
-            const targetIndex = state.g7_targets.findIndex(t => t.id === targetId);
-            const target = state.g7_targets[targetIndex];
-
-            if (target.matched) return;
-
-            // 邏輯: 任何 Subject + Verb Phrase 都是正確的，只要是未配對的目標即可
-            if (!target.matched) {
-                state.g7_matches++;
-                target.matched = true;
-                target.finalVerb = state.g7_selectedSource; // 標記最終配對的動詞
-                
-                // 移除已使用的動詞來源
-                state.g7_sources = state.g7_sources.filter(s => s.verb !== state.g7_selectedSource);
-
-                const fullSentence = `${target.subject} ${target.finalVerb}.`;
-                MessageBox.show('連線成功！🎉', false);
-                // 移除 callTTS(fullSentence);
-                
-                state.g7_selectedSource = null;
-                renderGame7();
-
-                if (state.g7_matches === state.g7_targets.length) {
-                    MessageBox.show('恭喜！所有連線完成！', false);
-                }
+            
+            // 檢查金額是否在百位數範圍內
+            if (expectedValue > 999) {
+                 MessageBox.show("警告：總金額超過 $999。請專注於金額的英文表達。", false);
             }
+            
+            // 提取英文單字答案
+            const expectedWords = numberToWords(expectedValue) + " dollars";
+            const enteredWords = numberToWords(enteredValue) + " dollars";
+            
+            // 比對數字
+            if (enteredValue === expectedValue) {
+                state.g7_gameStatus = 'won';
+                MessageBox.show(`太棒了！總金額是 $${expectedValue}.00！🎉 (It's ${expectedWords})`, false);
+            } else {
+                state.g7_gameStatus = 'entering'; // 允許繼續嘗試
+                MessageBox.show(`不對哦，您輸入的金額是 $${enteredValue}。正確金額是 ${numberToWords(expectedValue)} dollars。再試一次計算吧！`, true);
+                document.getElementById('answer-input-g7').classList.add('border-red-500');
+                setTimeout(() => document.getElementById('answer-input-g7').classList.remove('border-red-500'), 500);
+            }
+            renderGame7();
         }
 
         function renderGame7() {
             const container = document.getElementById('game-content');
             if (currentGame !== 'game7') return;
 
-            const targetsHtml = state.g7_targets.map(t => {
-                const isMatched = t.matched;
-                const sentence = isMatched ? `${t.subject} ${t.finalVerb}.` : `${t.subject} _____ ?`;
-                return `
-                    <div id="target-${t.id}" 
-                         onclick="handleTargetClickG7('${t.id}')"
-                         class="p-3 image-target ${isMatched ? 'border-green-600 bg-green-100' : 'border-secondary-blue hover:bg-blue-100'} cursor-pointer">
-                        <p class="text-5xl mb-2">${t.emoji}</p>
-                        <p class="text-lg font-bold text-center mt-2 ${isMatched ? 'text-green-700' : 'text-blue-800'}">${sentence}</p>
-                    </div>
-                `;
-            }).join('');
+            const calc = state.g7_calculator;
+            const currentInputValue = state.g7_displayValue;
+            
+            // 題目列表
+            const itemsHtml = state.g7_items.map((item) => `
+                <div class="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm mb-2">
+                    <span class="text-xl">${item.emoji} <span class="item-name-display">${formatDisplayWord(item.name)}</span></span>
+                    <span class="text-xl font-bold text-red-600">$${item.price}</span>
+                </div>
+            `).join('');
 
-            const sourcesHtml = state.g7_sources.map(s => {
-                const isSelected = state.g7_selectedSource === s.verb;
-                return `
-                    <button onclick="handleSourceClickG7('${s.verb}')" 
-                            class="key-btn font-bold py-2 px-4 rounded-xl text-sm md:text-base 
-                                ${isSelected ? 'bg-primary-pink shadow-xl ring-4 ring-pink-500' : 'bg-accent-yellow hover:bg-yellow-400 shadow-cute'}">
-                        ${s.verb}
-                    </button>
-                `;
-            }).join('');
+            // 格式化計算機顯示
+            const formattedCalcDisplay = parseFloat(calc.calcDisplay).toLocaleString('en-US', {
+                 maximumFractionDigits: 2
+            });
+
+            // 提示欄 (句首大寫)
+            const costPrompt = state.g7_gameStatus === 'won' 
+                ? formatDisplayWord(`it's ${numberToWords(state.g7_totalCost)} dollars`, true) 
+                : formatDisplayWord("how much is it?", true);
+            
+            // 計算機按鈕
+            const calcButtons = [
+                'C', 'DEL', '/', 'x',
+                '7', '8', '9', '-',
+                '4', '5', '6', '+',
+                '1', '2', '3', '=',
+                '0', '.', 'R', '=' // R for Read (唸出輸入金額)
+            ];
 
             container.innerHTML = `
                 <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">🏃 動詞連連看 (Action Verb Connector)</h2>
-                    <p class="text-center text-sm text-blue-900 mb-4">目標: 點擊下方的動詞卡 (Verb)，再點擊上方的圖片 (Subject)，組成正確的現在進行式句子。</p>
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">💰 花費計算機 (cost calculator)</h2>
+                    <p class="text-center text-sm text-blue-900 mb-4">目標: 使用計算機計算總金額，然後將數字答案輸入到下方欄位。</p>
                 </section>
                 
-                <div class="p-4 bg-white rounded-xl shadow-md border-4 border-gray-300 w-full">
-                    <div class="grid grid-cols-3 gap-4">
-                        ${targetsHtml}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- 物品清單 -->
+                    <div class="md:col-span-2 p-4 bg-keyboard-bg rounded-xl shadow-md border-4 border-accent-yellow">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-3">🛒 shopping list</h3>
+                        ${itemsHtml}
+                        <div class="flex justify-end mt-4 pt-4 border-t-2 border-gray-300">
+                            <span class="text-2xl font-extrabold text-blue-700">total: ??</span>
+                        </div>
+                    </div>
+
+                    <!-- 計算機 -->
+                    <div class="md:col-span-1 w-full max-w-xs mx-auto">
+                        <div class="calc-display mb-4 text-4xl">
+                            ${formattedCalcDisplay}
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            ${calcButtons.map(key => {
+                                let keyClass = 'calc-key-number';
+                                if (['C', 'DEL'].includes(key)) keyClass = 'calc-key-clear';
+                                else if (['+', '-', 'x', '/', 'R', '='].includes(key)) {
+                                    keyClass = key === '=' ? 'calc-key-equal' : 'calc-key-operator';
+                                }
+
+                                return `
+                                    <button onclick="handleCalcKey('${key}')" 
+                                            class="calc-key ${keyClass} rounded-xl shadow-cute ${key === '=' ? 'row-span-2' : ''}"
+                                            style="${key === '=' ? 'grid-row-end: span 2;' : ''}">
+                                        ${key === 'x' ? 'x' : key === '/' ? '÷' : key === 'R' ? '🔊' : key}
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
                 </div>
 
-                <div class="p-4 bg-keyboard-bg rounded-xl shadow-md border-4 border-accent-yellow w-full">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">動詞庫 (${state.g7_sources.length} 剩餘)</h3>
-                    <div class="flex flex-wrap justify-center gap-3">
-                        ${sourcesHtml}
+                <!-- 答案和朗讀區 -->
+                <div class="p-6 bg-white rounded-xl shadow-md border-4 border-primary-pink">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">❓ ${formatDisplayWord("how much is it?", true)}</h3>
+                    <div class="flex items-center space-x-4">
+                        <input type="number" id="answer-input-g7" 
+                               value="${currentInputValue}"
+                               oninput="state.g7_displayValue = this.value.slice(0, 3);"
+                               maxlength="3"
+                               placeholder="輸入數字 (0-999)" 
+                               class="text-3xl p-3 border-4 border-secondary-blue rounded-lg text-center w-32 font-bold focus:border-blue-500">
+                        
+                        <button onclick="checkAnswerG7()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-cute text-xl">
+                            ✅ 檢查答案
+                        </button>
+                        
+                        <p class="text-3xl font-extrabold text-pink-600 item-name-display">${costPrompt}</p>
                     </div>
                 </div>
                 
                 <div class="text-center mt-6">
-                    <button onclick="initGame7()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重新開始</button>
+                    <button onclick="initGame7()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
+                        🔄 重新開始/換題目
+                    </button>
                 </div>
             `;
+            
+            // 每次渲染後確保輸入框與狀態同步
+            const inputElement = document.getElementById('answer-input-g7');
+            if (inputElement) {
+                inputElement.value = currentInputValue;
+                if (state.g7_gameStatus === 'won') inputElement.disabled = true;
+                else inputElement.disabled = false;
+            }
+            
         }
         // --- Game 7 End ---
 
         // --- Game 8: 💥 神奇發音機 (Digraph Blaster) ---
         function initGame8() {
             const source = localData.g8_digraphs;
-            if (source.length === 0) { MessageBox.show("請在後台新增 Digraph 單字！", true); return; }
+            if (source.length === 0) { MessageBox.show("請在後台新增 digraph 單字！", true); return; }
 
             state.g8_currentWord = shuffleArray(source)[0];
             state.g8_gameStatus = 'playing';
             state.g8_score = 0; // 重置分數
             
             // 每次出題時自動朗讀一次
-            callTTS(state.g8_currentWord.full);
+            callTTS(state.g8_currentWord.full); // 恢復 Game 8 聲音
 
             renderGame8();
         }
@@ -1429,14 +1789,14 @@
             const digraphButtons = shuffleArray(allDigraphs).map(d => `
                 <button onclick="handleDigraphClickG8('${d}')"
                         class="key-btn bg-red-400 hover:bg-red-500 active:shadow-key-active shadow-cute text-3xl font-bold text-white rounded-xl transition duration-150">
-                    ${d}
+                    ${formatDisplayWord(d)}
                 </button>
             `).join('');
 
             container.innerHTML = `
                 <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">💥 神奇發音機 (Digraph Blaster)</h2>
-                    <p class="text-center text-sm text-blue-900 mb-4">目標: 點擊正確的輔音字母組合 (${allDigraphs.join(', ')}) 來完成單字！</p>
+                    <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">💥 神奇發音機 (digraph blaster)</h2>
+                    <p class="text-center text-sm text-blue-900 mb-4">目標: 點擊正確的輔音字母組合 (${allDigraphs.map(d => formatDisplayWord(d)).join(', ')}) 來完成單字！</p>
                 </section>
                 
                 <div class="text-center text-2xl font-bold text-gray-700 mb-4">分數: ${state.g8_score}</div>
@@ -1447,11 +1807,11 @@
                     <div class="flex flex-col items-center justify-center mb-6">
                         <h3 class="text-xl font-semibold text-gray-800 mb-2">點擊喇叭聽取單字發音:</h3>
                         
-                        <div class="flex items-center space-x-4">
+                        <div class="flex items-center justify-center space-x-4">
                             <div class="digraph-display-box flex items-center justify-center space-x-2 shadow-lg">
-                                <span class="digraph-letter-part">${blanks[0]}</span>
+                                <span class="digraph-letter-part">${formatDisplayWord(blanks[0])}</span>
                                 <div class="digraph-blank">?</div>
-                                <span class="digraph-letter-part">${blanks[1]}</span>
+                                <span class="digraph-letter-part">${formatDisplayWord(blanks[1])}</span>
                             </div>
                             <button onclick="callTTS(state.g8_currentWord.full)" 
                                     class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition duration-200"
@@ -1496,7 +1856,7 @@
                 newEntry = { id: newId, word: wordPhrase, emoji: newEmoji, url: `https://placehold.co/150x120/${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}/ffffff?text=${wordPhrase.replace(/\s/g, '+')}` };
                 localData[key].push(newEntry);
             } else if (key === 'g7_verbs') {
-                newEntry = { id: newId, verb: wordPhrase, emoji: newEmoji, url: `https://placehold.co/150x120/${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}/ffffff?text=${wordPhrase.replace(/\s/g, '+')}` };
+                newEntry = { id: newId, fullSentence: wordPhrase, emoji: newEmoji, url: `https://placehold.co/150x120/${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}/ffffff?text=${wordPhrase.replace(/\s/g, '+')}` };
                 localData[key].push(newEntry);
             }
 
@@ -1520,7 +1880,7 @@
             { key: 'g4_bingo_words', name: '🎤 賓果單字', isObjectArray: false, hasMultiInput: false },
             { key: 'g5_sentences', name: '💬 問句重組', isObjectArray: false, hasMultiInput: false },
             { key: 'g6_routines', name: '🤸 日常活動', isObjectArray: true, hasMultiInput: false },
-            { key: 'g7_verbs', name: '🏃 動詞連連看', isObjectArray: true, hasMultiInput: false },
+            // 移除 g7_verbs 的管理區塊
             { key: 'g8_digraphs', name: '💥 發音機', isObjectArray: true, hasMultiInput: true }, // Digraphs has multi input
         ];
         let currentAdminKey = ADMIN_TABS[0].key;
@@ -1529,7 +1889,8 @@
             return ADMIN_TABS.find(t => t.key === currentAdminKey);
         }
         
-        function handleBulkAdd(inputElement, isObjectArray, objectStructure) {
+        // 修正後的 handleBulkAdd 函數
+        function handleBulkAdd(inputElement, isObjectArray) {
             const inputContent = inputElement.value.trim();
             if (!inputContent) return;
 
@@ -1540,12 +1901,16 @@
             lines.forEach(line => {
                 let newEntry = null;
 
-                if (isObjectArray) {
-                    // 對於複雜對象 (如 g2_words, g8_digraphs, g6/g7)，用戶必須在單一輸入框內提供所有逗號分隔的值
-                    // 這裡只處理單行輸入，避免複雜的批量對象解析。
-
-                    // 針對 Phonics 或 Digraphs 的簡單批量添加：假設輸入格式為：VALUE1,VALUE2,VALUE3
-                    const values = line.split(',').map(v => v.trim().toUpperCase());
+                if (!isObjectArray) {
+                    // 對於簡單字串陣列 (Hangman, Bingo, 問句重組)
+                    const normalizedEntry = line; // 不再強制大寫
+                    // 檢查重複
+                    if (!currentList.includes(normalizedEntry)) {
+                        newEntry = normalizedEntry;
+                    }
+                } else {
+                    // 對於 Phonics 或 Digraphs 的簡單批量添加：假設輸入格式為：VALUE1,VALUE2,VALUE3
+                    const values = line.split(',').map(v => v.trim()); // 不強制大寫，保持原始輸入
                     const newId = crypto.randomUUID();
 
                     if (currentAdminKey === 'g2_words' && values.length >= 2) {
@@ -1557,13 +1922,6 @@
                     // 由於批量添加複雜對象容易出錯，我們只支持單行添加，因此這部分代碼保持單次添加邏輯
                     // 如果需要複雜批量添加，建議使用專門的 CSV/JSON 導入功能，這裡不實現複雜解析。
                     
-                } else {
-                    // 對於簡單字串陣列 (Hangman, Bingo, 問句重組)
-                    const normalizedEntry = line.toUpperCase();
-                    // 檢查重複
-                    if (!currentList.includes(normalizedEntry)) {
-                        newEntry = normalizedEntry;
-                    }
                 }
                 
                 if (newEntry) {
@@ -1573,7 +1931,7 @@
             });
 
             if (addedCount > 0) {
-                saveWordsToLocal();
+                saveWordsToLocal(); 
                 MessageBox.show(`成功新增 ${addedCount} 個詞彙！`, false);
                 inputElement.value = ''; // 清空輸入
                 renderWordAdmin();
@@ -1596,26 +1954,31 @@
 
             if (currentAdminKey === 'g2_words') {
                 inputField = `
-                    <p class="text-xs text-red-600 mb-1 w-full text-left">💡 批量新增：請在第一個欄位輸入，使用逗號分隔 (Phonics,Word,Hint)</p>
-                    <textarea id="admin-input-1" placeholder="Phonics 組合, 對應單字, 中文提示 (每行一個詞彙)" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase w-full resize-y h-24"></textarea>
+                    <p class="text-xs text-red-600 mb-1 w-full text-left">💡 批量新增：請在第一個欄位輸入，使用逗號分隔 (Phonics,Word,Hint)。**注意：請用大寫輸入來強調單字。**</p>
+                    <textarea id="admin-input-1" placeholder="Phonics 組合, 對應單字, 中文提示 (每行一個詞彙)" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue w-full resize-y h-24"></textarea>
                 `;
             } else if (currentAdminKey === 'g8_digraphs') {
                 inputField = `
-                    <p class="text-xs text-red-600 mb-1 w-full text-left">💡 批量新增：請在第一個欄位輸入，使用逗號分隔 (Digraphs,Incomplete,Full Word)</p>
-                    <textarea id="admin-input-1" placeholder="Digraphs, 不完整單字, 完整單字 (每行一個詞彙)" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase w-full resize-y h-24"></textarea>
+                    <p class="text-xs text-red-600 mb-1 w-full text-left">💡 批量新增：請在第一個欄位輸入，使用逗號分隔 (Digraphs,Incomplete,Full Word)。**注意：請用大寫輸入來強調單字。**</p>
+                    <textarea id="admin-input-1" placeholder="Digraphs, 不完整單字, 完整單字 (每行一個詞彙)" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue w-full resize-y h-24"></textarea>
                 `;
-            } else if (currentAdminKey === 'g6_routines' || currentAdminKey === 'g7_verbs') {
-                // 簡化輸入：只需要英文片語和 URL
+            } else if (currentAdminKey === 'g6_routines') {
+                // 日常活動
                 inputField = `
+                    <p class="text-xs text-red-600 mb-1 w-full text-left">💡 日常活動: 完整的動詞片語 (WASH MY FACE)。**注意：請用大寫輸入來強調單字。**</p>
                     <input type="text" id="admin-input-1" placeholder="英文片語/動作 (如: BRUSH TEETH)" maxlength="30" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase flex-1">
                     <input type="text" id="admin-input-2" placeholder="圖片URL (留空則自動生成Emoji)" maxlength="100" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue flex-1">
                 `;
                 addButtonText = isGeneratingImage ? addButtonText : '✨ 自動生成 Emoji 並新增';
+            } else if (currentAdminKey === 'g7_verbs') {
+                 // 動詞連連看 (現在是計算機，所以這個頁面不應該出現)
+                 inputField = `<p class="text-lg text-gray-700 w-full text-center">遊戲已更改為 **花費計算機**，此頁面不再需要管理詞彙。</p>`;
+                 addButtonText = 'N/A';
             } else {
                 // 適用於 G3, G4, G5 的批量新增
                 inputField = `
-                    <p class="text-xs text-red-600 mb-1 w-full text-left">💡 批量新增：每個單字/句子一行，按 Enter 鍵換行即可。</p>
-                    <textarea id="admin-input-1" placeholder="單字或完整句子 (每行一個詞彙)" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue uppercase w-full resize-y h-24"></textarea>
+                    <p class="text-xs text-red-600 mb-1 w-full text-left">💡 批量新增：每個單字/句子一行，按 Enter 鍵換行即可。**注意：請用大寫輸入來強調單字。**</p>
+                    <textarea id="admin-input-1" placeholder="單字或完整句子 (每行一個詞彙)" class="p-3 border-2 border-gray-300 rounded-lg focus:ring-secondary-blue focus:border-secondary-blue w-full resize-y h-24"></textarea>
                 `;
             }
 
@@ -1626,17 +1989,26 @@
                 if (currentTab.isObjectArray) {
                     // Object Array: Use item.id for deletion
                     // 特殊處理 G6/G7 顯示 Emoji
-                    if (currentAdminKey === 'g6_routines' || currentAdminKey === 'g7_verbs') {
+                    if (currentAdminKey === 'g6_routines') {
                         const verb = item.word || item.verb;
                         const emoji = item.emoji || '';
-                        display = `${emoji} / ${verb} / URL:${item.url.substring(0, 30)}...`;
+                        display = `${emoji} / ${formatDisplayWord(verb)} / URL:${item.url.substring(0, 30)}...`;
+                    } else if (currentAdminKey === 'g7_verbs') {
+                         const sentence = item.fullSentence;
+                        const verbParticiple = extractVerbParticiple(sentence);
+                        const emoji = item.emoji || '';
+                        // 刪除 G7 Admin 的顯示，因為它現在是計算機
+                        return ''; 
                     } else {
-                        display = JSON.stringify(item).replace(/"/g, '').replace(/{|}/g, '').toUpperCase();
+                        // Phonics/Digraphs 根據原始儲存狀態顯示
+                        display = JSON.stringify(item);
+                        if (item.phonics) display = `Phonics: ${formatDisplayWord(item.phonics)}, Word: ${formatDisplayWord(item.word)}`;
+                        if (item.digraph) display = `Digraph: ${formatDisplayWord(item.digraph)}, Full: ${formatDisplayWord(item.full)}`;
                     }
                     deleteId = item.id;
                 } else {
-                    // Simple String Array: Use index for deletion
-                    display = item;
+                    // Simple String Array: Filter by Index
+                    display = formatDisplayWord(item);
                     deleteId = index;
                 }
 
@@ -1652,7 +2024,7 @@
 
             container.innerHTML = `
                 <section class="w-full bg-primary-pink p-4 rounded-xl shadow-inner border-b-8 border-pink-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-white mb-2 text-center">⚙️ 單字/設定管理後台 (Local Storage Admin Panel)</h2>
+                    <h2 class="text-xl md:text-3xl font-bold text-white mb-2 text-center">⚙️ 單字/設定管理後台 (local storage admin panel)</h2>
                     <p class="text-center text-sm text-pink-100">💡 這裡的單字僅儲存在您當前的瀏覽器中。</p>
                 </section>
                 
@@ -1668,11 +2040,11 @@
                     <label for="admin-input-1" class="block text-lg font-semibold text-gray-800 mb-2">新增 ${currentTab.name} 詞彙</label>
                     <div class="flex space-x-2 flex-wrap">
                         ${inputField}
-                        <button id="admin-add-button" onclick="addWordAdmin()" 
+                        ${currentAdminKey !== 'g7_verbs' ? `<button id="admin-add-button" onclick="addWordAdmin()" 
                                 class="bg-secondary-blue hover:bg-blue-400 text-blue-900 font-bold py-3 px-6 rounded-lg shadow-cute transition duration-150"
                                 ${isGeneratingImage ? 'disabled' : ''}>
                             ${addButtonText}
-                        </button>
+                        </button>` : ''}
                     </div>
                 </div>
 
@@ -1688,7 +2060,12 @@
         
         function setCurrentAdminKey(key) {
             currentAdminKey = key;
-            renderWordAdmin();
+            // 修正：如果切換到 G7 則直接渲染，跳過 Admin 渲染
+            if (key === 'g7_verbs') {
+                initGame7();
+            } else {
+                renderWordAdmin();
+            }
         }
 
         function addWordAdmin() {
@@ -1711,9 +2088,8 @@
             }
             
             // 對於物件陣列：只支持單獨添加或批量對象（已簡化為只處理單獨添加以避免複雜性）
-            const input1 = document.getElementById('admin-input-1')?.value.trim().toUpperCase(); // 英文片語/單字
+            const input1 = document.getElementById('admin-input-1')?.value.trim(); // 保持原始輸入大小寫
             const input2 = document.getElementById('admin-input-2')?.value.trim(); // URL/對應單字
-            const input3 = document.getElementById('admin-input-3')?.value.trim(); // 額外提示 (Phonics/Digraphs)
 
             let newEntry = null;
 
@@ -1723,7 +2099,7 @@
             if (isImageGame) {
                 if (!input1) { MessageBox.show("請填寫英文片語/動作！", true); return; }
                 
-                // 1. 自動提取 Emoji
+                // 1. 自動提取 Emoji (使用完整的句子)
                 const newEmoji = generateEmojiFromWord(input1);
                 
                 // 2. 確定 URL (如果 input2 是空的，則生成一個隨機顏色的 Placeholder)
@@ -1738,14 +2114,20 @@
                 if (currentAdminKey === 'g6_routines') {
                     newEntry = { id: newId, word: input1, emoji: newEmoji, url: finalUrl };
                 } else if (currentAdminKey === 'g7_verbs') {
-                    newEntry = { id: newId, verb: input1, emoji: newEmoji, url: finalUrl };
+                    // G7: 儲存整個句子，並用完整的句子來生成 Emoji
+                    const verbParticiple = extractVerbParticiple(input1.toUpperCase()); // 必須用大寫檢查 ing
+                    if (!verbParticiple) {
+                         MessageBox.show("動詞連連看句子格式錯誤：請確保句子最後一個詞是動詞 ing 形式。", true); return;
+                    }
+                    newEntry = { id: newId, fullSentence: input1, emoji: newEmoji, url: finalUrl };
                 }
                 
             } else if (currentAdminKey === 'g2_words') {
                 // Phonics 配對：單行輸入 (Phonics, Word, Hint)
                 const line = input1;
+                const hint = input2;
                 if (!line) { MessageBox.show("請輸入 Phonics 詞彙內容！", true); return; }
-                const values = line.split(',').map(v => v.trim().toUpperCase());
+                const values = line.split(',').map(v => v.trim()); // 不再強制大寫
                 if (values.length >= 2) {
                     newEntry = { id: crypto.randomUUID(), phonics: values[0], word: values[1], hint: values[2] || '' };
                 } else {
@@ -1755,7 +2137,7 @@
                 // Digraphs：單行輸入 (Digraphs, Incomplete, Full Word)
                  const line = input1;
                 if (!line) { MessageBox.show("請輸入 Digraphs 詞彙內容！", true); return; }
-                const values = line.split(',').map(v => v.trim().toUpperCase());
+                const values = line.split(',').map(v => v.trim()); // 不再強制大寫
                 if (values.length >= 3) {
                      newEntry = { id: crypto.randomUUID(), digraph: values[0], word: values[1], full: values[2] };
                 } else {
@@ -1771,7 +2153,7 @@
 
             // 檢查重複 (對於物件陣列)
             const list = localData[currentAdminKey];
-            if (currentTab.isObjectArray && list.some(item => (item.word || item.verb || item.full) === (newEntry.word || newEntry.verb || newEntry.full))) {
+            if (currentTab.isObjectArray && list.some(item => (item.word || item.fullSentence || item.full) === (newEntry.word || newEntry.fullSentence || newEntry.full))) {
                  MessageBox.show("詞彙已存在！", true); return;
             }
 
@@ -1806,7 +2188,7 @@
                 }
             }
             
-            saveWordsFromLocal();
+            saveWordsToLocal(); // 修正: 呼叫正確的儲存函數
             MessageBox.show("詞彙刪除成功！", false);
             renderWordAdmin();
         }
