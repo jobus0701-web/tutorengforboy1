@@ -354,7 +354,7 @@
         const G4_BINGO_SIZE = 4;
         
         // 新增: Quiz 相關設定
-        const MAX_QUESTIONS = 10; // G2, G4, G5, G6, G7, G8 回合數上限
+        const MAX_QUESTIONS = 10; // G2, G5, G6, G7, G8 回合數上限
 
         let currentGame = 'game2'; 
         let localData = {}; // 存放所有遊戲的自訂數據
@@ -435,7 +435,7 @@
             // G3
             g3_currentWord: '', g3_currentGuessWord: '', g3_guessedLetters: new Set(), g3_wrongGuesses: 0, g3_gameStatus: 'ready', g3_MAX_WRONG: 6, g3_emojiHint: '', 
             g3_score: 0, g3_currentQuestion: 0,
-            // G4
+            // G4 (Quiz removed, keeping score for G4 in case user wants to track lines won)
             g4_players: [], g4_calledWords: new Set(), g4_lastCalledWord: '', g4_gameStatus: 'ready', g4_isCalling: false,
             g4_score: 0, g4_currentQuestion: 0,
             // G5
@@ -1118,7 +1118,7 @@
                 MessageBox.show(`賓果單字庫不足 ${G4_BINGO_SIZE * G4_BINGO_SIZE} 個！`, true); return; 
             }
             
-            setupQuiz('g4'); // 設置回合制
+            // 移除: setupQuiz('g4'); // 設置回合制
 
             state.g4_players = [
                 { id: 1, name: '玩家 1', card: generateBingoCardG4(), marked: new Set(), winner: false, score: 0 },
@@ -1127,6 +1127,7 @@
             state.g4_calledWords = new Set();
             state.g4_lastCalledWord = '';
             state.g4_isCalling = false;
+            state.g4_gameStatus = 'ready'; // 設置初始狀態
             
             renderGame4();
         }
@@ -1135,11 +1136,16 @@
             if (state.g4_gameStatus === 'finished') { initGame4(); return; }
             if (state.g4_isCalling) return;
             
+            // NEW: Calculate the maximum number of words to call (half of total words)
+            const MAX_WORDS_TO_CALL = Math.floor(localData.g4_bingo_words.length / 2);
+            
             const availableWords = shuffleArray(localData.g4_bingo_words.filter(w => !state.g4_calledWords.has(w)));
-            if (availableWords.length === 0) { 
-                MessageBox.show("單字庫已抽完！", true); 
-                checkQuizEnd('g4', false); // 題目結束，沒有人獲勝
+            
+            // NEW: Check if the limit is reached or if no words are available
+            if (state.g4_calledWords.size >= MAX_WORDS_TO_CALL || availableWords.length === 0) { 
+                state.g4_gameStatus = 'finished';
                 renderGame4();
+                MessageBox.show(`單字庫已抽完或達到最大抽籤數 (${MAX_WORDS_TO_CALL})，遊戲結束！`, true); 
                 return; 
             }
             
@@ -1164,15 +1170,13 @@
             });
 
             if (winnerFound) {
-                state.g4_gameStatus = 'finished'; // 賓果遊戲結束，此回合結束
-                checkQuizEnd('g4', true); // 獲勝計分
+                state.g4_gameStatus = 'finished'; // 賓果遊戲結束
+                // 移除: checkQuizEnd('g4', true); 
                 renderGame4();
                 MessageBox.show(`賓果！玩家 ${state.g4_players.filter(p => p.winner).map(p => p.id).join(' 和 ')} 獲勝！🎉`, false);
             } else {
-                // 沒有獲勝，進入下一個回合
-                if (!checkQuizEnd('g4', false)) {
-                    renderGame4();
-                }
+                // 沒有獲勝，繼續下一輪
+                renderGame4();
             }
         }
 
@@ -1189,7 +1193,7 @@
                 if (checkWinG4(player)) {
                     player.winner = true;
                     state.g4_gameStatus = 'finished'; 
-                    checkQuizEnd('g4', true);
+                    // 移除: checkQuizEnd('g4', true);
                     renderGame4();
                     MessageBox.show(`賓果！玩家 ${playerId} 獲勝！🎉`, false);
                 }
@@ -1202,6 +1206,9 @@
         function renderGame4() {
             const container = document.getElementById('game-content');
             if (currentGame !== 'game4') return;
+            
+            // NEW: Calculate the maximum words to call for display
+            const MAX_WORDS_TO_CALL = Math.floor(localData.g4_bingo_words.length / 2);
             
             const renderCard = (player) => {
                 const cellsHtml = player.card.map((word, index) => {
@@ -1219,27 +1226,26 @@
                 `;
             };
             
-            const quizInfo = state.g4_gameStatus === 'finished' 
-                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g4_score} / ${MAX_QUESTIONS}</p>`
-                : `<p class="text-xl font-bold">回合: ${state.g4_currentQuestion} / ${MAX_QUESTIONS} (得分: ${state.g4_score})</p>`;
+            // REMOVED: quizInfo and replaced with Limit Info
+            const limitInfo = `<p class="text-xl font-bold">抽籤上限: ${MAX_WORDS_TO_CALL} 個單字 (總數: ${localData.g4_bingo_words.length})</p>`;
 
 
             const controlArea = `
                 <div class="text-center p-4 bg-keyboard-bg rounded-xl shadow-lg border-b-8 border-accent-yellow mb-6">
                     <h3 class="text-2xl font-bold text-gray-800 mb-3">${state.g4_gameStatus === 'ready' ? '準備開始' : state.g4_gameStatus === 'calling' ? '遊戲中' : '遊戲結束'}</h3>
-                     <div class="mb-2">${quizInfo}</div>
+                     <div class="mb-2">${limitInfo}</div>
                     <div class="mb-4 h-12 flex items-center justify-center">
                         <p class="text-4xl font-black text-red-700 transition duration-300 item-name-display">
-                            ${state.g4_lastCalledWord ? `單字: ${formatDisplayWord(state.g4_lastCalledWord)}` : state.g4_gameStatus === 'ready' ? '點擊開始按鈕' : '等待下一輪...'}
+                            ${state.g4_lastCalledWord ? `單字: ${formatDisplayWord(state.g4_lastCalledWord)}` : state.g4_gameStatus === 'ready' ? '點擊開始按鈕' : (state.g4_gameStatus === 'finished' ? '遊戲結束' : '等待下一輪...')}
                         </p>
                     </div>
                     <button onclick="startCallingG4()" 
                             class="bg-primary-pink hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-cute text-xl transition duration-200 
                                 ${state.g4_isCalling || state.g4_gameStatus === 'finished' ? 'opacity-50 cursor-not-allowed' : ''}"
                             ${state.g4_isCalling || state.g4_gameStatus === 'finished' ? 'disabled' : ''}>
-                        ${state.g4_gameStatus === 'ready' ? '🔊 開始遊戲 / 抽取單字' : state.g4_gameStatus === 'calling' ? (state.g4_isCalling ? '🎙️ 播報中...' : '🔊 抽取下一個單字') : '🔄 重新開始'}
+                        ${state.g4_gameStatus === 'ready' ? '🔊 開始遊戲 / 抽取單字' : state.g4_gameStatus === 'finished' ? '🔄 重新開始' : (state.g4_isCalling ? '🎙️ 播報中...' : '🔊 抽取下一個單字')}
                     </button>
-                    <p class="text-xs text-gray-600 mt-2">已抽出 ${state.g4_calledWords.size} 個單字 / 總單字數 ${localData.g4_bingo_words.length} 個</p>
+                    <p class="text-xs text-gray-600 mt-2">已抽出 ${state.g4_calledWords.size} 個單字 / 剩餘抽籤數 ${MAX_WORDS_TO_CALL - state.g4_calledWords.size} 個</p>
                 </div>
             `;
 
