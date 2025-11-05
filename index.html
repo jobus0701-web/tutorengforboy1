@@ -321,6 +321,41 @@
     <div id="message-box" class="fixed top-4 right-4 bg-red-500 text-white p-3 rounded-lg shadow-xl z-50 transition-opacity duration-300 hidden">
         <p id="message-content"></p>
     </div>
+    
+    <!-- 最終分數提示框 (NEW) -->
+    <div id="final-message-box" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm w-11/12 border-4 border-primary-pink animate-bounce-in">
+            <h3 id="final-message-title" class="text-3xl font-extrabold text-primary-pink mb-4">挑戰完成！</h3>
+            <p id="final-message-content" class="text-xl font-semibold text-gray-700 mb-6"></p>
+            <button onclick="hideFinalMessage(); initGame(currentGame);" class="bg-secondary-blue hover:bg-blue-400 text-blue-900 font-bold py-3 px-8 rounded-full shadow-cute text-lg">
+                重新挑戰
+            </button>
+        </div>
+    </div>
+    <script>
+        function showFinalMessage(title, content) {
+            const box = document.getElementById('final-message-box');
+            document.getElementById('final-message-title').textContent = title;
+            document.getElementById('final-message-content').innerHTML = content;
+            box.classList.remove('hidden');
+            box.classList.add('flex');
+        }
+        function hideFinalMessage() {
+            const box = document.getElementById('final-message-box');
+            box.classList.add('hidden');
+            box.classList.remove('flex');
+        }
+        function initGame(gameKey) {
+            switch (gameKey) {
+                case 'game3': initGame3(); break;
+                case 'game5': initGame5(); break;
+                case 'game6': initGame6(); break;
+                case 'game7': initGame7(); break;
+                case 'game8': initGame8(); break;
+                default: break;
+            }
+        }
+    </script>
 
     <!-- 頂部標題與導航 -->
     <header class="w-full max-w-6xl text-center mb-4 p-4 bg-primary-pink rounded-2xl shadow-lg border-b-4 border-pink-400">
@@ -414,6 +449,11 @@
                 { id: crypto.randomUUID(), word: 'DO HER HOMEWORK', emoji: '👧📚', url: 'https://placehold.co/150x120/ff8a65/000000?text=DO%20HOMEWORK' },
                 { id: crypto.randomUUID(), word: 'BRUSH HIS TEETH', emoji: '👦🦷', url: 'https://placehold.co/150x120/9ccc65/000000?text=BRUSH%20TEETH' },
                 { id: crypto.randomUUID(), word: 'PLAY ON HIS PHONE', emoji: '🎮📱', url: 'https://placehold.co/150x120/ab47bc/ffffff?text=PLAY%20PHONE' },
+                { id: crypto.randomUUID(), word: 'GO TO BED', emoji: '🛌💤', url: 'https://placehold.co/150x120/ab47bc/ffffff?text=GO%20TO%20BED' },
+                { id: crypto.randomUUID(), phonics: 'I-E', word: 'FIVE', hint: '數字五' },
+                { id: crypto.randomUUID(), word: 'HAVE DINNER', emoji: '🍽️', url: 'https://placehold.co/150x120/ab47bc/ffffff?text=HAVE%20DINNER' },
+                { id: crypto.randomUUID(), word: 'TAKE A SHOWER', emoji: '🚿', url: 'https://placehold.co/150x120/ab47bc/ffffff?text=TAKE%20SHOWER' },
+                { id: crypto.randomUUID(), word: 'GET DRESSED', emoji: '👕', url: 'https://placehold.co/150x120/ab47bc/ffffff?text=GET%20DRESSED' },
             ],
             // Game 8: 💥 神奇發音機 - 統一使用 pattern 和 word_template
             g8_digraphs: [
@@ -446,19 +486,18 @@
         let state = {
             // G2
             g2_matchCards: [], g2_flippedCards: [], g2_matchCount: 0, g2_gameStatus: 'ready',
-            // G2 Score/Quiz removed
             // G3
             g3_currentWord: '', g3_currentGuessWord: '', g3_guessedLetters: new Set(), g3_wrongGuesses: 0, g3_gameStatus: 'ready', g3_MAX_WRONG: 6, g3_emojiHint: '', 
-            g3_score: 0, g3_currentQuestion: 0,
+            g3_score: 0, g3_currentQuestion: 0, g3_isScoreEligible: true, // NEW: 該題是否可得分
             // G4 (Quiz removed, keeping score for G4 in case user wants to track lines won)
             g4_players: [], g4_calledWords: new Set(), g4_lastCalledWord: '', g4_gameStatus: 'ready', g4_isCalling: false,
             g4_score: 0, g4_currentQuestion: 0,
             // G5
             g5_currentSentence: '', g5_answerWords: [], g5_scrambleBlocks: [], g5_currentSort: [], g5_gameStatus: 'ready',
-            g5_score: 0, g5_currentQuestion: 0,
+            g5_score: 0, g5_currentQuestion: 0, g5_isScoreEligible: true, // NEW: 該題是否可得分
             // G6
             g6_targets: [], g6_sources: [], g6_matches: 0, g6_gameStatus: 'ready',
-            g6_score: 0, g6_currentQuestion: 0,
+            g6_score: 0, g6_currentQuestion: 0, g6_isScoreEligible: true, // NEW: 該題是否可得分
             // G7 (Cost Calculator)
             g7_items: [],
             g7_totalCost: 0,
@@ -467,10 +506,10 @@
                 currentValue: '0', memory: 0, operator: null, resetDisplay: true, calcDisplay: '0'
             },
             g7_gameStatus: 'ready',
-            g7_score: 0, g7_currentQuestion: 0,
+            g7_score: 0, g7_currentQuestion: 0, g7_isScoreEligible: true, // NEW: 該題是否可得分
             // G8
             g8_currentWord: null, g8_gameStatus: 'ready',
-            g8_score: 0, g8_currentQuestion: 0,
+            g8_score: 0, g8_currentQuestion: 0, g8_isScoreEligible: true, // NEW: 該題是否可得分
         };
         
         // --- Admin 狀態管理 (新增) ---
@@ -620,26 +659,59 @@
             return temp;
         }
 
-        // --- Quiz 結構新增 (G2 移除) ---
-        function setupQuiz(gameKey) {
+        // --- Quiz 結構新增 ---
+        function setupQuiz(gameKey, sourceArray) {
+            // 根據後台題目數量和 MAX_QUESTIONS 決定實際題數
+            const numQuestions = Math.min(MAX_QUESTIONS, sourceArray.length);
+            
             state[`${gameKey}_score`] = 0;
             state[`${gameKey}_currentQuestion`] = 1;
             state[`${gameKey}_gameStatus`] = 'playing';
+            state[`${gameKey}_isScoreEligible`] = true; // NEW: 每一回合開始時，重設為可得分
+            
+            // 根據實際題數切分題目列表
+            return shuffleArray(sourceArray).slice(0, numQuestions); 
         }
         
         function checkQuizEnd(gameKey, isCorrect) {
+            let currentQuestion = state[`${gameKey}_currentQuestion`];
+            // 根據不同的遊戲鍵獲取其題目源長度
+            let numQuestions = 0;
+            switch(gameKey) {
+                case 'g3': numQuestions = g3_currentSource.length; break;
+                case 'g5': numQuestions = g5_currentSource.length; break;
+                case 'g6': numQuestions = g6_currentSource.length; break;
+                case 'g7': numQuestions = g7_currentSource.length; break;
+                case 'g8': numQuestions = g8_currentSource.length; break;
+                default: numQuestions = MAX_QUESTIONS; 
+            }
+
+
+            // 1. 處理加分邏輯
             if (isCorrect) {
-                state[`${gameKey}_score`]++;
+                if (state[`${gameKey}_isScoreEligible`]) {
+                    state[`${gameKey}_score`]++;
+                    // 如果答對且可得分，分數已加，進入下一題
+                    state[`${gameKey}_isScoreEligible`] = false; // 確保本題不會再加分
+                }
+                
+                // 進入下一題
+                state[`${gameKey}_currentQuestion`]++;
+            } else {
+                // 答錯，失去本題的得分資格
+                state[`${gameKey}_isScoreEligible`] = false;
             }
             
-            state[`${gameKey}_currentQuestion`]++;
-
-            if (state[`${gameKey}_currentQuestion`] > MAX_QUESTIONS) {
+            // 2. 檢查遊戲是否結束 (只有在答對時才會增加 question number，所以只需檢查 currentQuestion)
+            if (state[`${gameKey}_currentQuestion`] > numQuestions) {
                 state[`${gameKey}_gameStatus`] = 'finished';
-                MessageBox.show(`挑戰完成！您的總得分是 ${state[`${gameKey}_score`]} / ${MAX_QUESTIONS}！🎉`, false);
+                // NEW: 呼叫最終提示框
+                showFinalMessage('挑戰完成！🎉', `您的最終得分是 <span class="text-3xl text-red-600 font-extrabold">${state[`${gameKey}_score`]}</span> / ${numQuestions}！`);
                 return true;
             }
-            return false;
+            
+            // 只有在答對時返回 true，讓遊戲流程繼續下一題
+            return isCorrect; 
         }
 
         // --- LocalStorage 存儲功能 (統一管理所有遊戲數據) ---
@@ -738,7 +810,7 @@
             renderApp();
         }
 
-        // --- Game 2: 🎶 Phonics 發音配對 (Vowel Sound Match) ---
+        // --- Game 2: 🎶 Phonics 發音配對 (Word-Sound Match) ---
         // NEW: 移除了 g2_currentSource, g2_score, g2_currentQuestion
         
         function initGame2() {
@@ -883,7 +955,7 @@
         // --- Game 2 End ---
 
         // --- Game 3: 🖍️ Hangman 猜單字 (Hangman) ---
-        // 由於 Hangman 是單一挑戰，我們將其視為 10 回合的連續挑戰
+        let g3_currentSource = []; // NEW: 儲存本輪的題目列表
         let g3_wordHistory = new Set();
         
         function getHangmanSVG(wrongGuesses, status) {
@@ -942,8 +1014,7 @@
             const source = localData.g3_words;
             if (source.length === 0) { MessageBox.show("請在後台新增 hangman 單字！", true); return; }
 
-            setupQuiz('g3');
-            g3_wordHistory = new Set();
+            g3_currentSource = setupQuiz('g3', source); // NEW: 根據規則初始化題目列表
             
             startNextRoundG3(); 
         }
@@ -951,23 +1022,20 @@
         function startNextRoundG3() {
             if (state.g3_gameStatus === 'finished') return;
 
-            const availableWords = localData.g3_words.filter(w => !g3_wordHistory.has(w));
-            if (availableWords.length === 0) {
-                 // 如果單字用盡，重新開始計數
-                 g3_wordHistory = new Set();
+            const currentWord = g3_currentSource[state.g3_currentQuestion - 1];
+            if (!currentWord) {
+                 // 題目用盡，檢查遊戲結束
+                 checkQuizEnd('g3', false);
+                 return;
             }
-            
-            const wordsToChoose = localData.g3_words.filter(w => !g3_wordHistory.has(w));
-            const randomWord = shuffleArray(wordsToChoose.length > 0 ? wordsToChoose : localData.g3_words)[0];
-            
-            g3_wordHistory.add(randomWord);
 
-            state.g3_currentWord = randomWord; 
-            state.g3_currentGuessWord = randomWord.toUpperCase(); 
+            state.g3_currentWord = currentWord; 
+            state.g3_currentGuessWord = currentWord.toUpperCase(); 
             
             state.g3_guessedLetters = new Set();
             state.g3_wrongGuesses = 0;
             state.g3_gameStatus = 'playing';
+            state.g3_isScoreEligible = true; // NEW: 重設可得分狀態
             state.g3_emojiHint = getEmojiHint(state.g3_currentGuessWord);
             
             renderGame3(); 
@@ -979,23 +1047,33 @@
             if (state.g3_gameStatus !== 'playing' || state.g3_guessedLetters.has(upperCaseLetter)) return;
             
             state.g3_guessedLetters.add(upperCaseLetter);
-            const isCorrect = state.g3_currentGuessWord.includes(upperCaseLetter);
+            const isCorrectLetter = state.g3_currentGuessWord.includes(upperCaseLetter);
             
-            if (!isCorrect) state.g3_wrongGuesses++;
+            if (!isCorrectLetter) {
+                state.g3_wrongGuesses++;
+                state.g3_isScoreEligible = false; // NEW: 猜錯字母，失去得分資格
+            }
             
             const winCondition = checkWinConditionG3();
 
             if (winCondition) {
-                MessageBox.show(`正確！單字是 ${state.g3_currentWord}！+1 分！✅`, false);
-                if (!checkQuizEnd('g3', true)) {
-                    setTimeout(startNextRoundG3, 1500);
+                const addedScore = state.g3_isScoreEligible ? '+1 分！' : ' (已錯過加分)';
+                MessageBox.show(`正確！單字是 ${state.g3_currentWord}！${addedScore} ✅`, false);
+                
+                const isFinalCorrect = checkQuizEnd('g3', true); // 檢查加分/結束
+                state.g3_gameStatus = 'won'; // 設為已答對狀態
+
+                if (!isFinalCorrect) {
+                    renderGame3(); // 重新渲染以顯示「下一題」按鈕
                 }
             } else if (state.g3_wrongGuesses >= state.g3_MAX_WRONG) {
+                // 輸掉本輪，且無法再得分
                 state.g3_gameStatus = 'lost';
+                state.g3_isScoreEligible = false; 
+                
                 MessageBox.show(`很可惜。正確單字是 ${state.g3_currentWord}。0 分。`, true);
-                if (!checkQuizEnd('g3', false)) {
-                     setTimeout(startNextRoundG3, 1500);
-                }
+
+                renderGame3();
             }
             renderGame3();
         }
@@ -1005,10 +1083,28 @@
             const guessedCorrectly = hiddenWord.every(char => state.g3_guessedLetters.has(char));
 
             if (guessedCorrectly) {
-                state.g3_gameStatus = 'won';
                 return true;
             } 
             return false;
+        }
+        
+        // NEW: 統一的下一題邏輯，用於 G3 答對後或輸掉後跳題
+        function nextQuestionG3() {
+             // 處理輸掉的情況：強制推進 question index，但不加分
+            if (state.g3_gameStatus === 'lost') {
+                 // 這裡只推進題目，因為在 guessLetterG3 中 isScoreEligible 已經變為 false
+                 // checkQuizEnd(false) 不會加分，但會推進 currentQuestion
+                 const isFinished = checkQuizEnd('g3', false); 
+                 if (isFinished) return;
+            }
+            
+            // 答對的邏輯在 guessLetterG3 結束時已處理 checkQuizEnd(true)
+
+            if (state.g3_currentQuestion > g3_currentSource.length) {
+                 checkQuizEnd('g3', false); // 確保最終狀態被設置
+            } else {
+                 startNextRoundG3();
+            }
         }
 
         function renderGame3() {
@@ -1037,16 +1133,34 @@
                     btnClass = state.g3_currentGuessWord.includes(upperCaseLetter) ? 'bg-green-400 cursor-not-allowed' : 'bg-red-400 cursor-not-allowed';
                     onClick = '';
                 }
-                if (state.g3_gameStatus !== 'playing') { btnClass = 'bg-gray-300 cursor-not-allowed'; onClick = ''; }
+                // 遊戲結束或輸掉本題時，禁用按鈕
+                const disableAll = state.g3_gameStatus !== 'playing' || state.g3_wrongGuesses >= state.g3_MAX_WRONG || state.g3_gameStatus === 'won';
+                if (disableAll) { 
+                    btnClass = 'bg-gray-300 cursor-not-allowed'; 
+                    onClick = ''; 
+                }
 
                 return `<button onclick="${onClick}" class="key-btn ${btnClass} active:shadow-key-active shadow-cute text-xl md:text-2xl font-extrabold rounded-xl transition duration-150 text-gray-800">${letter}</button>`;
             }).join('');
-
-            const hangmanDrawing = getHangmanSVG(state.g3_wrongGuesses, state.g3_gameStatus);
             
-            const quizInfo = state.g3_gameStatus === 'finished' 
-                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g3_score} / ${MAX_QUESTIONS}</p>`
-                : `<p class="text-xl font-bold">回合: ${state.g3_currentQuestion} / ${MAX_QUESTIONS} (得分: ${state.g3_score})</p>`;
+            const numQuestions = g3_currentSource.length;
+            const isQuizComplete = state.g3_currentQuestion > numQuestions;
+            
+            let controlButton = '';
+            if (state.g3_gameStatus === 'finished' || isQuizComplete) {
+                controlButton = `<button onclick="initGame3()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重新挑戰</button>`;
+            } else if (state.g3_gameStatus === 'won' || state.g3_gameStatus === 'lost') {
+                 // 答對或輸掉後，顯示「下一題」按鈕
+                 controlButton = `<button onclick="nextQuestionG3();" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">下一題 ➡️</button>`;
+            } else {
+                 // 正常遊戲中，只顯示重設本題
+                 controlButton = `<button onclick="startNextRoundG3()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重設本題</button>`;
+            }
+
+
+            const quizInfo = isQuizComplete 
+                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g3_score} / ${numQuestions}</p>`
+                : `<p class="text-xl font-bold">題數: ${state.g3_currentQuestion} / ${numQuestions} (得分: ${state.g3_score})</p>`;
 
 
             container.innerHTML = `
@@ -1057,7 +1171,7 @@
                 <div class="flex flex-col md:flex-row gap-6">
                     <div class="flex-1 p-4 bg-white rounded-xl shadow-md border-2 border-gray-200 flex flex-col items-center">
                         <p class="text-lg font-semibold text-center mb-2 text-blue-800">💔 錯誤次數: ${state.g3_wrongGuesses}/${state.g3_MAX_WRONG}</p>
-                        <div class="w-full max-w-sm h-[250px] flex items-center justify-center mx-auto p-4">${hangmanDrawing}</div>
+                        <div class="w-full max-w-sm h-[250px] flex items-center justify-center mx-auto p-4">${getHangmanSVG(state.g3_wrongGuesses, state.g3_gameStatus)}</div>
                         <p class="text-4xl mt-2 text-center">提示: ${state.g3_emojiHint}</p>
                     </div>
                     <div class="flex-1 p-4 bg-keyboard-bg rounded-xl shadow-md border-2 border-gray-200">
@@ -1065,9 +1179,7 @@
                         <div class="text-center text-4xl md:text-6xl font-extrabold tracking-widest mb-6 p-2 bg-white rounded-lg border-b-4 border-gray-300 whitespace-nowrap overflow-x-auto">${displayWord}</div>
                         <div class="grid grid-cols-7 gap-1 md:gap-2">${alphabetBtns}</div>
                         <div class="text-center mt-6">
-                            <button onclick="initGame3()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
-                                ${state.g3_gameStatus === 'playing' ? '重設遊戲' : '開始新挑戰'}
-                            </button>
+                            ${controlButton}
                         </div>
                     </div>
                 </div>
@@ -1296,10 +1408,7 @@
             const source = localData.g5_sentences;
             if (source.length === 0) { MessageBox.show("請在後台新增問句！", true); return; }
             
-            setupQuiz('g5');
-            
-            // 隨機選取 10 組句子作為題庫來源 (如果少於 10 組，則全部選取)
-            g5_currentSource = shuffleArray(source).slice(0, MAX_QUESTIONS);
+            g5_currentSource = setupQuiz('g5', source); // NEW: 根據規則初始化題目列表
             
             startNextRoundG5();
         }
@@ -1317,6 +1426,7 @@
             state.g5_scrambleBlocks = shuffleWordsG5(state.g5_currentSentence);
             state.g5_currentSort = Array(state.g5_scrambleBlocks.length).fill(null); 
             state.g5_gameStatus = 'playing';
+            state.g5_isScoreEligible = true; // NEW: 重設可得分狀態
 
             renderGame5();
         }
@@ -1340,6 +1450,12 @@
         function handleResetTargetG5(index) {
             const item = state.g5_currentSort[index];
             if (!item || state.g5_gameStatus !== 'playing') return;
+            
+            // NEW: 嘗試移除時，視為一次「嘗試」，若本題仍可得分，則取消得分資格
+            if (state.g5_isScoreEligible) {
+                state.g5_isScoreEligible = false;
+                MessageBox.show("順序錯誤，本題無法再得分。", true);
+            }
 
             const originalBlock = state.g5_scrambleBlocks.find(l => l.id === item.id);
             if (originalBlock) originalBlock.isUsed = false;
@@ -1369,21 +1485,43 @@
             }
 
             if (isCorrect) {
-                MessageBox.show("太棒了！句子順序完全正確！+1 分！✅", false);
+                const addedScore = state.g5_isScoreEligible ? '+1 分！' : ' (已錯過加分)';
+                MessageBox.show(`太棒了！句子順序完全正確！${addedScore} ✅`, false);
                 speakSentenceG5(state.g5_currentSentence); 
                 
-                if (!checkQuizEnd('g5', true)) {
-                    setTimeout(startNextRoundG5, 1500); // 延遲 1.5 秒進入下一回合
+                const isFinished = checkQuizEnd('g5', true); // 檢查加分/結束
+                state.g5_gameStatus = 'won'; // 設為已答對狀態
+                
+                if (!isFinished) {
+                    renderGame5(); // 重新渲染以顯示「下一題」按鈕
                 }
+
             } else {
+                // NEW: 答錯時，取消得分資格
+                if (state.g5_isScoreEligible) {
+                    state.g5_isScoreEligible = false;
+                    MessageBox.show("順序不正確，本題無法再得分。", true);
+                } else {
+                    MessageBox.show("順序不正確，請再試試看！", true);
+                }
+                
                 const slots = document.querySelectorAll('.answer-slot');
                 slots.forEach(slot => {
                     slot.classList.add('incorrect');
                     setTimeout(() => slot.classList.remove('incorrect'), 500);
                 });
-                MessageBox.show("順序不正確，請再試試看！", true);
             }
         }
+        
+        // NEW: 統一的下一題邏輯，用於 G5 答對後換題
+        function nextQuestionG5() {
+            if (state.g5_currentQuestion > g5_currentSource.length) {
+                 checkQuizEnd('g5', false); // 確保最終狀態被設置
+            } else {
+                 startNextRoundG5();
+            }
+        }
+
 
         function renderGame5() {
             const container = document.getElementById('game-content');
@@ -1422,9 +1560,24 @@
                 });
             }, 0);
             
-            const quizInfo = state.g5_gameStatus === 'finished' 
-                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g5_score} / ${MAX_QUESTIONS}</p>`
-                : `<p class="text-xl font-bold">回合: ${state.g5_currentQuestion} / ${MAX_QUESTIONS} (得分: ${state.g5_score})</p>`;
+            const numQuestions = g5_currentSource.length;
+            const isQuizComplete = state.g5_currentQuestion > numQuestions;
+
+            let controlButton = '';
+            if (state.g5_gameStatus === 'finished' || isQuizComplete) {
+                controlButton = `<button onclick="initGame5()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重新挑戰</button>`;
+            } else if (state.g5_gameStatus === 'won') {
+                 // 答對後，顯示下一題
+                 controlButton = `<button onclick="nextQuestionG5();" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">下一題 ➡️</button>`;
+            } else if (state.g5_gameStatus === 'playing') {
+                 // 正常遊戲中，只顯示重設本題
+                 controlButton = `<button onclick="startNextRoundG5()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重設本題</button>`;
+            }
+
+
+            const quizInfo = isQuizComplete 
+                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g5_score} / ${numQuestions}</p>`
+                : `<p class="text-xl font-bold">題數: ${state.g5_currentQuestion} / ${numQuestions} (得分: ${state.g5_score})</p>`;
 
 
             container.innerHTML = `
@@ -1455,9 +1608,7 @@
                     </div>
                     
                     <div class="text-center mt-6">
-                        <button onclick="initGame5()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
-                            ${state.g5_gameStatus === 'finished' ? '重新挑戰' : '換個句子'}
-                        </button>
+                        ${controlButton}
                     </div>
                 </div>
             `;
@@ -1465,34 +1616,65 @@
         // --- Game 5 End ---
 
         // --- Game 6: 🤸 日常活動圖像配對 (Daily Routine Image Match) ---
-        let g6_currentSource = [];
+        let g6_currentSource = []; // NEW: 儲存本輪的題目列表 (每個元素包含 4 個配對)
+        const G6_PAIRS_PER_QUESTION = 4; // 一題有 4 組配對
 
         function initGame6() {
             const source = localData.g6_routines;
-            if (source.length === 0) { MessageBox.show("請在後台新增日常活動！", true); return; }
+            // NEW: 確保有足夠的題目可以組成一題
+            if (source.length < G6_PAIRS_PER_QUESTION) { 
+                MessageBox.show(`請在後台新增至少 ${G6_PAIRS_PER_QUESTION} 組日常活動才能開始遊戲！`, true); 
+                return; 
+            }
 
-            setupQuiz('g6');
+            // 調整 setupQuiz 邏輯：按 G6_PAIRS_PER_QUESTION 分組
+            const shuffledSource = shuffleArray(source);
             
-            // 隨機選取 4 組配對
-            g6_currentSource = shuffleArray(source).slice(0, 4); 
-            state.g6_targets = g6_currentSource.map(p => ({ ...p, matched: false })); // 圖片 (Target)
+            // 將題目來源按 G6_PAIRS_PER_QUESTION 分組 (每組就是一題)
+            let groupedSource = [];
+            for (let i = 0; i < shuffledSource.length; i += G6_PAIRS_PER_QUESTION) {
+                // 確保每題都是完整的 G6_PAIRS_PER_QUESTION 組
+                if (i + G6_PAIRS_PER_QUESTION <= shuffledSource.length) {
+                    groupedSource.push(shuffledSource.slice(i, i + G6_PAIRS_PER_QUESTION));
+                }
+            }
             
+            // 限制總題數不超過 MAX_QUESTIONS
+            g6_currentSource = groupedSource.slice(0, MAX_QUESTIONS);
+            
+            if (g6_currentSource.length === 0) {
+                 MessageBox.show(`後台單字庫不足 ${G6_PAIRS_PER_QUESTION} 組完整題目！`, true); return; 
+            }
+
+
+            // 初始化 Quiz 狀態，使用實際可出的題數
+            state.g6_score = 0;
+            state.g6_currentQuestion = 1;
+            state.g6_gameStatus = 'playing';
+            state.g6_isScoreEligible = true; // NEW: 每一回合開始時，重設為可得分
+
+
             startNextRoundG6();
         }
         
         function startNextRoundG6() {
             if (state.g6_gameStatus === 'finished') return;
 
-            // 每次只出 4 個圖片和 4 個單字卡，直到 10 回合結束 (如果題庫不足，則重複出題)
-            const allWords = localData.g6_routines;
-            if (allWords.length === 0) return;
-            
-            const wordsForRound = shuffleArray(allWords).slice(0, 4);
+            // 取得本題的 4 組配對
+            const wordsForRound = g6_currentSource[state.g6_currentQuestion - 1];
 
+            if (!wordsForRound || wordsForRound.length !== G6_PAIRS_PER_QUESTION) {
+                 // 題目用盡 (不應該發生，但作為保護)
+                 checkQuizEnd('g6', false);
+                 return;
+            }
+            
             state.g6_targets = wordsForRound.map(p => ({ ...p, matched: false })); 
+            // 來源卡片必須包含所有單字，並打亂
             state.g6_sources = shuffleArray(wordsForRound.map(p => ({ id: crypto.randomUUID(), word: p.word, isMatched: false }))); 
             state.g6_matches = 0;
             state.g6_gameStatus = 'playing';
+            state.g6_isScoreEligible = true; // NEW: 重設可得分狀態
 
             setupDragDropG6();
             renderGame6();
@@ -1501,67 +1683,101 @@
 
         function setupDragDropG6() {
             // 確保每次渲染後重新綁定事件
-            setTimeout(() => {
-                let draggedItem = null;
+            let draggedItem = null;
 
-                document.ondragstart = (e) => {
-                    if (e.target.classList.contains('drag-source')) {
-                        draggedItem = e.target.dataset.word;
-                        e.dataTransfer.setData('text/plain', draggedItem);
-                        e.target.classList.add('opacity-50');
-                    }
-                };
+            document.ondragstart = (e) => {
+                if (e.target.classList.contains('drag-source')) {
+                    draggedItem = e.target.dataset.word;
+                    e.dataTransfer.setData('text/plain', draggedItem);
+                    e.target.classList.add('opacity-50');
+                }
+            };
 
-                document.ondragend = (e) => {
-                    if (e.target.classList.contains('drag-source')) {
-                        e.target.classList.remove('opacity-50');
-                        draggedItem = null;
-                    }
-                };
+            document.ondragend = (e) => {
+                if (e.target.classList.contains('drag-source')) {
+                    e.target.classList.remove('opacity-50');
+                    draggedItem = null;
+                }
+            };
 
-                document.ondragover = (e) => {
-                    const target = e.target.closest('.image-target');
-                    if (target) e.preventDefault();
-                };
-
-                document.ondrop = (e) => {
-                    const target = e.target.closest('.image-target');
-                    const sourceWord = e.dataTransfer.getData('text/plain');
-
-                    if (target && sourceWord) {
+            document.ondragover = (e) => {
+                const target = e.target.closest('.image-target');
+                // 確保目標是有效的圖片框且尚未配對
+                if (target && target.dataset.word) { 
+                    const targetWord = target.dataset.word;
+                    const isAlreadyMatched = state.g6_targets.find(t => t.word === targetWord)?.matched;
+                    if (!isAlreadyMatched) {
                         e.preventDefault();
-                        
-                        const targetWord = target.dataset.word; 
+                    }
+                }
+            };
 
-                        if (sourceWord === targetWord) {
-                            handleMatchG6(sourceWord, targetWord, target);
+            // 使用 document.ondrop，並在裡面處理邏輯
+            document.ondrop = (e) => {
+                const targetElement = e.target.closest('.image-target');
+                const sourceWord = e.dataTransfer.getData('text/plain');
+                
+                // NEW: 修正拖曳問題的關鍵點：確保目標有效且未匹配
+                if (targetElement && sourceWord) {
+                    e.preventDefault();
+                    
+                    const targetWord = targetElement.dataset.word; 
+                    const isAlreadyMatched = state.g6_targets.find(t => t.word === targetWord)?.matched;
+
+                    if (sourceWord === targetWord && !isAlreadyMatched) {
+                        handleMatchG6(sourceWord, targetWord, targetElement);
+                    } else {
+                        // NEW: 答錯，取消得分資格
+                        if (state.g6_isScoreEligible) {
+                            state.g6_isScoreEligible = false;
+                            MessageBox.show('配對錯誤，本題無法再得分。', true);
                         } else {
                             MessageBox.show('配對錯誤，請再試試！', true);
                         }
+                        renderGame6(); // 重新渲染以確保按鈕狀態正確
                     }
-                };
-            }, 0); 
+                }
+            };
         }
         
-        async function handleMatchG6(sourceWord, targetWord, targetElement) {
-            state.g6_matches++;
+        // NEW: 統一的下一題邏輯，用於 G6 答對後換題
+        function nextQuestionG6() {
+            if (state.g6_currentQuestion > g6_currentSource.length) {
+                 checkQuizEnd('g6', false); // 確保最終狀態被設置
+            } else {
+                 startNextRoundG6();
+            }
+        }
 
+
+        async function handleMatchG6(sourceWord, targetWord, targetElement) {
+            // 1. 更新狀態 (這必須在分數檢查之前完成)
+            state.g6_matches++;
             const targetIndex = state.g6_targets.findIndex(t => t.word === targetWord);
             if (targetIndex !== -1) state.g6_targets[targetIndex].matched = true;
-
             state.g6_sources = state.g6_sources.filter(s => s.word !== sourceWord);
-
-            renderGame6();
             
-            targetElement.classList.add('border-green-600', 'bg-green-100');
+            // 2. 視覺回饋
+            // targetElement.classList.add('border-green-600', 'bg-green-100'); // 讓 render 處理顏色，這裡只更新狀態
             MessageBox.show('配對成功！🎉', false);
 
-            if (state.g6_matches === state.g6_targets.length) {
-                // 回合結束
-                 if (!checkQuizEnd('g6', true)) {
-                    setTimeout(startNextRoundG6, 1500);
+            // 3. 檢查是否完成一題 (一題 = 4 個都匹配成功)
+            const isQuestionComplete = state.g6_matches === G6_PAIRS_PER_QUESTION;
+
+            if (isQuestionComplete) {
+                const addedScore = state.g6_isScoreEligible ? '+1 分！' : ' (已錯過加分)';
+                MessageBox.show(`恭喜完成本題！${addedScore}`, false);
+                
+                const isFinished = checkQuizEnd('g6', true); // 進入下一題並檢查結束
+                state.g6_gameStatus = 'won'; // 設為已答對狀態
+                
+                if (!isFinished) { 
+                    renderGame6(); // 重新渲染以顯示「下一題」按鈕
                 }
             }
+            
+            // 4. 重新渲染 (無論是否完成一題)
+            renderGame6();
         }
 
 
@@ -1585,16 +1801,31 @@
                 <button draggable="true" data-word="${s.word}" class="drag-source key-btn bg-accent-yellow hover:bg-yellow-400 text-gray-800 font-bold py-2 px-4 rounded-xl text-sm md:text-base">${formatDisplayWord(s.word)}</button>
             `).join('');
             
-            const quizInfo = state.g6_gameStatus === 'finished' 
-                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g6_score} / ${MAX_QUESTIONS}</p>`
-                : `<p class="text-xl font-bold">回合: ${state.g6_currentQuestion} / ${MAX_QUESTIONS} (得分: ${state.g6_score})</p>`;
+            const numQuestions = g6_currentSource.length;
+            const isQuizComplete = state.g6_currentQuestion > numQuestions;
+
+            let controlButton = '';
+            if (state.g6_gameStatus === 'finished' || isQuizComplete) {
+                 controlButton = `<button onclick="initGame6()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重新挑戰</button>`;
+            } else if (state.g6_gameStatus === 'won') {
+                 // 答對後，顯示下一題
+                 controlButton = `<button onclick="nextQuestionG6();" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">下一題 ➡️</button>`;
+            } else {
+                 // 遊戲中，允許重設本題
+                 controlButton = `<button onclick="startNextRoundG6()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重設本題</button>`;
+            }
+
+
+            const quizInfo = isQuizComplete 
+                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g6_score} / ${numQuestions}</p>`
+                : `<p class="text-xl font-bold">題數: ${state.g6_currentQuestion} / ${numQuestions} (得分: ${state.g6_score})</p>`;
 
 
             container.innerHTML = `
                 <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
                     <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">🤸 日常活動圖像配對 (daily routine image match)</h2>
                     <div class="text-center mb-4">${quizInfo}</div>
-                    <p class="text-center text-sm text-blue-900 mb-4">目標: 將下方的單字卡拖曳到上方對應的日常活動圖片上。</p>
+                    <p class="text-center text-sm text-blue-900 mb-4">目標: 將下方的單字卡拖曳到上方對應的日常活動圖片上。 (一題共 ${G6_PAIRS_PER_QUESTION} 組配對)</p>
                 </section>
                 
                 <div class="p-4 bg-white rounded-xl shadow-md border-4 border-gray-300 w-full">
@@ -1606,18 +1837,17 @@
                 <div class="p-4 bg-keyboard-bg rounded-xl shadow-md border-4 border-accent-yellow w-full">
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">拖曳單字庫 (${state.g6_sources.length} 剩餘)</h3>
                     <div class="flex flex-wrap justify-center gap-3 drag-area">
-                        ${sourcesHtml.length > 0 ? sourcesHtml : '<p class="text-lg font-bold text-green-700">全部完成！進入下一回合...</p>'}
+                        ${sourcesHtml.length > 0 ? sourcesHtml : '<p class="text-lg font-bold text-green-700">全部完成！等待下一題...</p>'}
                     </div>
                 </div>
                 
                 <div class="text-center mt-6">
-                    <button onclick="initGame6()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
-                        ${state.g6_gameStatus === 'finished' ? '重新挑戰' : '重設遊戲'}
-                    </button>
+                    ${controlButton}
                 </div>
             `;
 
-            if (state.g6_sources.length > 0) setupDragDropG6();
+            // 修正：必須確保在每次渲染後都重新綁定拖曳事件，特別是 drop 處理器
+            setupDragDropG6();
         }
         // --- Game 6 End ---
 
@@ -1715,9 +1945,14 @@
         }
         
         // ------------------ 遊戲初始化與檢查 -------------------
+        let g7_currentSource = [];
 
         function initGame7() {
-            setupQuiz('g7'); // 設置回合制
+            // SHOP_ITEMS 是固定的，我們使用 MAX_QUESTIONS 來限制題數
+            // 由於每一回合都是生成新的題目，所以 sourceArray 使用一個包含 MAX_QUESTIONS 個虛擬元素的陣列
+            const source = Array(MAX_QUESTIONS).fill(0); 
+            g7_currentSource = setupQuiz('g7', source); // NEW: 根據規則初始化題目列表
+            
             startNextRoundG7();
         }
         
@@ -1744,6 +1979,7 @@
             };
             
             state.g7_gameStatus = 'entering'; 
+            state.g7_isScoreEligible = true; // NEW: 重設可得分狀態
             renderGame7();
         }
 
@@ -1751,7 +1987,8 @@
         function checkAnswerG7() {
             if (state.g7_gameStatus === 'finished') return;
             
-            const enteredValue = parseInt(document.getElementById('answer-input-g7').value);
+            const inputElement = document.getElementById('answer-input-g7');
+            const enteredValue = parseInt(inputElement.value);
             const expectedValue = state.g7_totalCost;
 
             if (isNaN(enteredValue) || enteredValue < 1) {
@@ -1762,20 +1999,40 @@
             const expectedWords = numberToWords(expectedValue) + " dollars";
             
             if (enteredValue === expectedValue) {
-                MessageBox.show(`太棒了！總金額是 $${expectedValue}.00！+1 分！✅ (It's ${expectedWords})`, false);
+                const addedScore = state.g7_isScoreEligible ? '+1 分！' : ' (已錯過加分)';
+                MessageBox.show(`太棒了！總金額是 $${expectedValue}.00！${addedScore} ✅ (It's ${expectedWords})`, false);
                 state.g7_gameStatus = 'won';
 
-                if (!checkQuizEnd('g7', true)) {
-                    setTimeout(startNextRoundG7, 1500); 
+                const isFinished = checkQuizEnd('g7', true);
+                
+                if (!isFinished) {
+                    renderGame7(); // 重新渲染以顯示「下一題」按鈕
                 }
 
             } else {
-                MessageBox.show(`不對哦，您輸入的金額是 $${enteredValue}。正確金額是 ${expectedWords}。再試一次計算吧！`, true);
-                document.getElementById('answer-input-g7').classList.add('border-red-500');
-                setTimeout(() => document.getElementById('answer-input-g7').classList.remove('border-red-500'), 500);
+                 // NEW: 答錯時，取消得分資格
+                if (state.g7_isScoreEligible) {
+                    state.g7_isScoreEligible = false;
+                    MessageBox.show(`不對哦，本題無法再得分。正確答案是 ${expectedWords}。`, true);
+                } else {
+                    MessageBox.show(`不對哦，請再試一次計算吧！`, true);
+                }
+                
+                inputElement.classList.add('border-red-500');
+                setTimeout(() => inputElement.classList.remove('border-red-500'), 500);
             }
             renderGame7();
         }
+        
+        // NEW: 統一的下一題邏輯，用於 G7 答對後換題
+        function nextQuestionG7() {
+            if (state.g7_currentQuestion > g7_currentSource.length) {
+                 checkQuizEnd('g7', false); // 確保最終狀態被設置
+            } else {
+                 startNextRoundG7();
+            }
+        }
+
 
         function renderGame7() {
             const container = document.getElementById('game-content');
@@ -1807,9 +2064,24 @@
                 '0', '.', 'R', '=' 
             ];
             
-            const quizInfo = state.g7_gameStatus === 'finished' 
-                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g7_score} / ${MAX_QUESTIONS}</p>`
-                : `<p class="text-xl font-bold">回合: ${state.g7_currentQuestion} / ${MAX_QUESTIONS} (得分: ${state.g7_score})</p>`;
+            const numQuestions = g7_currentSource.length;
+            const isQuizComplete = state.g7_currentQuestion > numQuestions;
+
+            let controlButton = '';
+            if (state.g7_gameStatus === 'finished' || isQuizComplete) {
+                 controlButton = `<button onclick="initGame7()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重新挑戰</button>`;
+            } else if (state.g7_gameStatus === 'won') {
+                 // 答對後，顯示下一題
+                 controlButton = `<button onclick="nextQuestionG7();" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">下一題 ➡️</button>`;
+            } else {
+                 // 遊戲中，允許重設本題
+                 controlButton = `<button onclick="startNextRoundG7()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重設本題</button>`;
+            }
+
+
+            const quizInfo = isQuizComplete 
+                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g7_score} / ${numQuestions}</p>`
+                : `<p class="text-xl font-bold">題數: ${state.g7_currentQuestion} / ${numQuestions} (得分: ${state.g7_score})</p>`;
 
 
             container.innerHTML = `
@@ -1876,9 +2148,7 @@
                 </div>
                 
                 <div class="text-center mt-6">
-                    <button onclick="initGame7()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
-                        ${state.g7_gameStatus === 'finished' ? '重新挑戰' : '重設遊戲/換題目'}
-                    </button>
+                    ${controlButton}
                 </div>
             `;
             
@@ -1902,10 +2172,7 @@
             const source = localData.g8_digraphs;
             if (source.length === 0) { MessageBox.show("請在後台新增 digraph 單字！", true); return; }
 
-            setupQuiz('g8');
-            
-            // 隨機選取 10 組單字作為題庫來源 (如果少於 10 組，則重複選取)
-            g8_currentSource = shuffleArray(source).slice(0, MAX_QUESTIONS);
+            g8_currentSource = setupQuiz('g8', source); // NEW: 根據規則初始化題目列表
             
             startNextRoundG8();
         }
@@ -1921,6 +2188,7 @@
 
             state.g8_currentWord = currentWord;
             state.g8_gameStatus = 'playing';
+            state.g8_isScoreEligible = true; // NEW: 重設可得分狀態
             
             // 修正: 移除自動朗讀 callTTS(state.g8_currentWord.full); 
 
@@ -1931,17 +2199,35 @@
             if (state.g8_gameStatus !== 'playing') return;
 
             if (pattern.toUpperCase() === state.g8_currentWord.pattern.toUpperCase()) {
-                MessageBox.show('正確！發射成功！+1 分！💥', false);
+                const addedScore = state.g8_isScoreEligible ? '+1 分！' : ' (已錯過加分)';
+                MessageBox.show(`正確！發射成功！${addedScore} 💥`, false);
                 
-                // 延遲換題
-                if (!checkQuizEnd('g8', true)) {
-                    setTimeout(startNextRoundG8, 1500);
+                const isFinished = checkQuizEnd('g8', true); // 檢查加分/結束
+                state.g8_gameStatus = 'won'; // 設為已答對狀態
+                
+                if (!isFinished) { 
+                    renderGame8(); // 重新渲染以顯示「下一題」按鈕
                 }
 
             } else {
-                MessageBox.show('錯誤！發射失敗！再試試其他組合。', true);
+                 // NEW: 答錯時，取消得分資格
+                if (state.g8_isScoreEligible) {
+                    state.g8_isScoreEligible = false;
+                    MessageBox.show('錯誤！發射失敗，本題無法再得分。', true);
+                } else {
+                    MessageBox.show('錯誤！請再試試其他組合。', true);
+                }
             }
             renderGame8();
+        }
+
+        // NEW: 統一的下一題邏輯，用於 G8 答對後換題
+        function nextQuestionG8() {
+            if (state.g8_currentQuestion > g8_currentSource.length) {
+                 checkQuizEnd('g8', false); // 確保最終狀態被設置
+            } else {
+                 startNextRoundG8();
+            }
         }
 
         // NEW: 重寫 renderGame8 中的 word display 邏輯
@@ -1994,15 +2280,31 @@
             // Modified button generation to use finalOptions and force UPPERCASE display
             const digraphButtons = finalOptions.map(p => `
                 <button onclick="handleDigraphClickG8('${p}')"
-                        class="key-btn digraph-btn bg-red-400 hover:bg-red-500 active:shadow-key-active shadow-cute text-xl md:text-3xl font-bold text-white rounded-xl transition duration-150">
+                        class="key-btn digraph-btn bg-red-400 hover:bg-red-500 active:shadow-key-active shadow-cute text-xl md:text-3xl font-bold text-white rounded-xl transition duration-150"
+                        ${state.g8_gameStatus !== 'playing' ? 'disabled' : ''}>
                     ${p.toUpperCase()} 
                 </button>
             `).join('');
 
 
-            const quizInfo = state.g8_gameStatus === 'finished' 
-                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g8_score} / ${MAX_QUESTIONS}</p>`
-                : `<p class="text-xl font-bold">回合: ${state.g8_currentQuestion} / ${MAX_QUESTIONS} (得分: ${state.g8_score})</p>`;
+            const numQuestions = g8_currentSource.length;
+            const isQuizComplete = state.g8_currentQuestion > numQuestions;
+
+            let controlButton = '';
+            if (state.g8_gameStatus === 'finished' || isQuizComplete) {
+                 controlButton = `<button onclick="initGame8()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重新挑戰</button>`;
+            } else if (state.g8_gameStatus === 'won') {
+                 // 答對後，顯示下一題
+                 controlButton = `<button onclick="nextQuestionG8();" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">下一題 ➡️</button>`;
+            } else {
+                 // 遊戲中，允許重設本題
+                 controlButton = `<button onclick="startNextRoundG8()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">重設本題</button>`;
+            }
+
+
+            const quizInfo = isQuizComplete 
+                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g8_score} / ${numQuestions}</p>`
+                : `<p class="text-xl font-bold">題數: ${state.g8_currentQuestion} / ${numQuestions} (得分: ${state.g8_score})</p>`;
 
 
             container.innerHTML = `
@@ -2038,9 +2340,7 @@
                 ` : `<p class="text-4xl font-black text-green-700 p-10">恭喜！您已完成所有挑戰！總分 ${state.g8_score}！</p>`}
                 
                 <div class="text-center mt-6">
-                    <button onclick="initGame8()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
-                        ${state.g8_gameStatus === 'finished' ? '重新挑戰' : '重設遊戲'}
-                    </button>
+                    ${controlButton}
                 </div>
             `;
         }
