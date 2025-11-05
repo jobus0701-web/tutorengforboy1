@@ -202,6 +202,7 @@
             font-size: 4rem;
             font-weight: 900;
             color: #1E40AF; /* 深藍色 */
+            display: inline-block;
         }
         .digraph-blank {
             width: 80px;
@@ -209,11 +210,12 @@
             background-color: #FFEC99;
             border: 4px dashed #FFD700;
             border-radius: 10px;
-            display: flex;
+            display: inline-flex; /* 修正為 inline-flex 讓其與文字同行 */
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
             color: #D1A3A3;
+            margin: 0 5px; /* 增加間距 */
         }
         /* Game 7 Calculator Styles */
         .calc-display {
@@ -380,7 +382,7 @@
             'I AM', 'YOU ARE', 'HE IS', 'SHE IS', 'IT IS', 'WE ARE', 'THEY ARE'
         ];
 
-        // 預設單字庫 (保持不變)
+        // 預設單字庫 (G8 結構已更新以支援 MAGIC_E)
         const DEFAULT_WORDS = {
             g2_words: [
                 { id: crypto.randomUUID(), phonics: 'A-E', word: 'CAKE', hint: '生日蛋糕' },
@@ -406,13 +408,19 @@
                 { id: crypto.randomUUID(), word: 'BRUSH HIS TEETH', emoji: '👦🦷', url: 'https://placehold.co/150x120/9ccc65/000000?text=BRUSH%20TEETH' },
                 { id: crypto.randomUUID(), word: 'PLAY ON HIS PHONE', emoji: '🎮📱', url: 'https://placehold.co/150x120/ab47bc/ffffff?text=PLAY%20PHONE' },
             ],
-            // 移除 G7_VERBS，因為現在是計算機
+            // Game 8: 💥 神奇發音機 - 統一使用 pattern 和 word_template
             g8_digraphs: [
-                { id: crypto.randomUUID(), digraph: 'SH', word: '_OP', full: 'SHOP' },
-                { id: crypto.randomUUID(), digraph: 'CH', word: '_AT', full: 'CHAT' },
-                { id: crypto.randomUUID(), digraph: 'TH', word: '_INK', full: 'THINK' },
-                { id: crypto.randomUUID(), digraph: 'WH', word: '_ALE', full: 'WHALE' },
-                { id: crypto.randomUUID(), digraph: 'PH', word: 'ELE_ANT', full: 'ELEPHANT' },
+                // Digraphs
+                { id: crypto.randomUUID(), pattern: 'SH', word_template: '?OP', full: 'SHOP' },
+                { id: crypto.randomUUID(), pattern: 'CH', word_template: '?AT', full: 'CHAT' },
+                { id: crypto.randomUUID(), pattern: 'TH', word_template: '?INK', full: 'THINK' },
+                { id: crypto.randomUUID(), pattern: 'WH', word_template: '?ALE', full: 'WHALE' },
+                { id: crypto.randomUUID(), pattern: 'PH', word_template: 'ELE?ANT', full: 'ELEPHANT' },
+                // Magic E (長母音) - pattern 包含 _, template 包含多個 ?
+                { id: crypto.randomUUID(), pattern: 'A_E', word_template: 'C?KE', full: 'CAKE' },
+                { id: crypto.randomUUID(), pattern: 'I_E', word_template: 'F?VE', full: 'FIVE' },
+                { id: crypto.randomUUID(), pattern: 'O_E', word_template: 'N?S?', full: 'NOSE' },
+                { id: crypto.randomUUID(), pattern: 'U_E', word_template: 'T?BE', full: 'TUBE' },
             ],
         };
 
@@ -1926,10 +1934,10 @@
             renderGame8();
         }
         
-        async function handleDigraphClickG8(digraph) {
+        async function handleDigraphClickG8(pattern) {
             if (state.g8_gameStatus !== 'playing') return;
 
-            if (digraph.toUpperCase() === state.g8_currentWord.digraph.toUpperCase()) {
+            if (pattern.toUpperCase() === state.g8_currentWord.pattern.toUpperCase()) {
                 MessageBox.show('正確！發射成功！+1 分！💥', false);
                 
                 // 延遲換題
@@ -1943,18 +1951,42 @@
             renderGame8();
         }
 
+        // NEW: 重寫 renderGame8 中的 word display 邏輯
+        function renderWordDisplayG8(wordTemplate) {
+            // 將模板字串中的每個字符轉換為 HTML 元素
+            const parts = wordTemplate.split('');
+            let html = '';
+            
+            parts.forEach(char => {
+                if (char === '?') {
+                    // 這是空白方塊，用於替換 Digraphs 或 Magic E 的字母
+                    html += `<div class="digraph-blank">?</div>`;
+                } else if (char === ' ') {
+                    // 處理空格
+                    html += `<span class="digraph-letter-part w-4"></span>`;
+                } else {
+                    // 這是普通字母
+                    html += `<span class="digraph-letter-part">${formatDisplayWord(char)}</span>`;
+                }
+            });
+
+            return html;
+        }
+
         function renderGame8() {
             const container = document.getElementById('game-content');
             if (currentGame !== 'game8') return;
 
             const wordBlock = state.g8_currentWord;
-            const blanks = wordBlock.word.includes('_') ? wordBlock.word.split('_') : ['', ''];
             
-            const allDigraphs = [...new Set(localData.g8_digraphs.map(d => d.digraph))];
-            const digraphButtons = shuffleArray(allDigraphs).map(d => `
-                <button onclick="handleDigraphClickG8('${d}')"
-                        class="key-btn bg-red-400 hover:bg-red-500 active:shadow-key-active shadow-cute text-3xl font-bold text-white rounded-xl transition duration-150">
-                    ${formatDisplayWord(d)}
+            // 使用 word_template 進行渲染
+            const wordDisplayHtml = renderWordDisplayG8(wordBlock.word_template.toUpperCase());
+
+            const allPatterns = [...new Set(localData.g8_digraphs.map(d => d.pattern))];
+            const digraphButtons = shuffleArray(allPatterns).map(p => `
+                <button onclick="handleDigraphClickG8('${p}')"
+                        class="key-btn bg-red-400 hover:bg-red-500 active:shadow-key-active shadow-cute text-xl md:text-3xl font-bold text-white rounded-xl transition duration-150">
+                    ${formatDisplayWord(p)}
                 </button>
             `).join('');
 
@@ -1967,7 +1999,7 @@
                 <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
                     <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">💥 神奇發音機 (digraph blaster)</h2>
                     <div class="text-center mb-4">${quizInfo}</div>
-                    <p class="text-center text-sm text-blue-900 mb-4">目標: 點擊正確的輔音字母組合 (${allDigraphs.map(d => formatDisplayWord(d)).join(', ')}) 來完成單字！</p>
+                    <p class="text-center text-sm text-blue-900 mb-4">目標: 點擊正確的發音組合 (${allPatterns.map(p => formatDisplayWord(p)).join(', ')}) 來完成單字！</p>
                 </section>
                 
                 ${state.g8_gameStatus !== 'finished' ? `
@@ -1977,10 +2009,9 @@
                         <h3 class="text-xl font-semibold text-gray-800 mb-2">點擊喇叭聽取單字發音:</h3>
                         
                         <div class="flex items-center justify-center space-x-4">
-                            <div class="digraph-display-box flex items-center justify-center space-x-2 shadow-lg">
-                                <span class="digraph-letter-part">${formatDisplayWord(blanks[0])}</span>
-                                <div class="digraph-blank">?</div>
-                                <span class="digraph-letter-part">${formatDisplayWord(blanks[1])}</span>
+                            <!-- NEW: 使用 wordDisplayHtml 渲染 -->
+                            <div class="digraph-display-box flex items-center justify-center space-x-0 shadow-lg p-4">
+                                ${wordDisplayHtml}
                             </div>
                             <button onclick="callTTS(state.g8_currentWord.full)" 
                                     class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition duration-200"
@@ -2044,7 +2075,8 @@
             { key: 'g4_bingo_words', name: '🎤 賓果單字', isObjectArray: false, headers: ['Word'] },
             { key: 'g5_sentences', name: '💬 問句重組', isObjectArray: false, headers: ['Sentence'] },
             { key: 'g6_routines', name: '🤸 日常活動', isObjectArray: true, headers: ['Phrase', 'URL'] },
-            { key: 'g8_digraphs', name: '💥 發音機', isObjectArray: true, headers: ['Digraph', 'Incomplete Word', 'Full Word'] },
+            // NEW: G8 headers now reflect pattern and template
+            { key: 'g8_digraphs', name: '💥 發音機', isObjectArray: true, headers: ['Pattern(SH/O_E)', 'Word Template(??AT/N?SE)', 'Full Word'] },
         ];
         
         function getCurrentAdminTab() {
@@ -2088,7 +2120,8 @@
                     if (adminState.currentAdminKey === 'g2_words' && rawValues.length >= 2) {
                         newEntry = { id: newId, phonics: rawValues[0], word: rawValues[1], hint: rawValues[2] || '' };
                     } else if (adminState.currentAdminKey === 'g8_digraphs' && rawValues.length >= 3) {
-                        newEntry = { id: newId, digraph: rawValues[0], word: rawValues[1], full: rawValues[2] };
+                        // NEW G8 Structure
+                        newEntry = { id: newId, pattern: rawValues[0], word_template: rawValues[1], full: rawValues[2] };
                     } else if (adminState.currentAdminKey === 'g6_routines' && rawValues.length >= 1) {
                         const wordPhrase = rawValues[0];
                         const url = rawValues[1] || '';
@@ -2145,7 +2178,8 @@
                     if (currentTab.key === 'g2_words' && values.length >= 2) {
                         newEntry = { id: newId, phonics: values[0], word: values[1], hint: values[2] || '' };
                     } else if (currentTab.key === 'g8_digraphs' && values.length >= 3) {
-                        newEntry = { id: newId, digraph: values[0], word: values[1], full: values[2] };
+                         // NEW G8 Structure
+                        newEntry = { id: newId, pattern: values[0], word_template: values[1], full: values[2] };
                     }
                 }
                 
@@ -2262,10 +2296,11 @@
                     updatedItem.hint = document.getElementById(`edit-hint-${id}`).value.trim();
                     if (!updatedItem.phonics || !updatedItem.word) isValid = false;
                 } else if (currentTab.key === 'g8_digraphs') {
-                    updatedItem.digraph = document.getElementById(`edit-digraph-${id}`).value.trim();
-                    updatedItem.word = document.getElementById(`edit-incomplete-${id}`).value.trim();
+                    // NEW G8 Structure
+                    updatedItem.pattern = document.getElementById(`edit-pattern-${id}`).value.trim();
+                    updatedItem.word_template = document.getElementById(`edit-template-${id}`).value.trim();
                     updatedItem.full = document.getElementById(`edit-full-${id}`).value.trim();
-                    if (!updatedItem.digraph || !updatedItem.word || !updatedItem.full) isValid = false;
+                    if (!updatedItem.pattern || !updatedItem.word_template || !updatedItem.full) isValid = false;
                 } else if (currentTab.key === 'g6_routines') {
                     updatedItem.word = document.getElementById(`edit-phrase-${id}`).value.trim();
                     updatedItem.url = document.getElementById(`edit-url-${id}`).value.trim();
@@ -2337,10 +2372,11 @@
                             </div>
                         `;
                     } else if (currentTab.key === 'g8_digraphs') {
+                        // NEW G8 Structure for editing
                          displayHtml = `
                             <div class="flex flex-col w-full space-y-2">
-                                <input type="text" id="edit-digraph-${id}" class="admin-input" value="${item.digraph}" placeholder="Digraph">
-                                <input type="text" id="edit-incomplete-${id}" class="admin-input" value="${item.word}" placeholder="Incomplete Word">
+                                <input type="text" id="edit-pattern-${id}" class="admin-input" value="${item.pattern}" placeholder="Pattern (SH/O_E)">
+                                <input type="text" id="edit-template-${id}" class="admin-input" value="${item.word_template}" placeholder="Template (??AT/N?SE)">
                                 <input type="text" id="edit-full-${id}" class="admin-input" value="${item.full}" placeholder="Full Word">
                             </div>
                         `;
@@ -2363,7 +2399,8 @@
                     } else if (currentTab.key === 'g2_words') {
                         display = `Phonics: ${formatDisplayWord(item.phonics)}, Word: ${formatDisplayWord(item.word)}, Hint: ${item.hint}`;
                     } else if (currentTab.key === 'g8_digraphs') {
-                        display = `Digraph: ${formatDisplayWord(item.digraph)}, Full: ${formatDisplayWord(item.full)}`;
+                        // NEW G8 Structure for display
+                        display = `Pattern: ${formatDisplayWord(item.pattern)}, Template: ${formatDisplayWord(item.word_template)}, Full: ${formatDisplayWord(item.full)}`;
                     } else {
                         display = formatDisplayWord(item);
                     }
@@ -2525,7 +2562,8 @@
                 if (currentTab.key === 'g2_words' && values.length >= 2) {
                     newEntry = { id: newId, phonics: values[0], word: values[1], hint: values[2] || '' };
                 } else if (currentTab.key === 'g8_digraphs' && values.length >= 3) {
-                     newEntry = { id: newId, digraph: values[0], word: values[1], full: values[2] };
+                     // NEW G8 Structure
+                     newEntry = { id: newId, pattern: values[0], word_template: values[1], full: values[2] };
                 } else {
                      MessageBox.show(`格式錯誤：請確保輸入內容符合 ${currentTab.headers.join(', ')} 的順序。`, true); return;
                 }
