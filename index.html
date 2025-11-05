@@ -37,11 +37,16 @@
         }
         /* 特別針對按鈕元素中的文字強制使用小寫 (除非特別重寫) */
         button.key-btn {
-            text-transform: lowercase;
+            /* 修正 Game 3 保持小寫，但 Game 8 應該要大寫，故此處取消強制小寫 */
+            text-transform: none;
         }
         /* 計算機按鍵維持原樣 */
         .calc-key {
             text-transform: none !important;
+        }
+        /* NEW: Game 8 按鈕樣式，強制大寫 */
+        .digraph-btn {
+            text-transform: uppercase !important; 
         }
 
 
@@ -356,7 +361,7 @@
         const G4_BINGO_SIZE = 4;
         
         // 新增: Quiz 相關設定
-        const MAX_QUESTIONS = 10; // G2, G5, G6, G7, G8 回合數上限
+        const MAX_QUESTIONS = 10; // G3, G5, G6, G7, G8 回合數上限
 
         let currentGame = 'game2'; 
         let localData = {}; // 存放所有遊戲的自訂數據
@@ -382,15 +387,14 @@
             'I AM', 'YOU ARE', 'HE IS', 'SHE IS', 'IT IS', 'WE ARE', 'THEY ARE'
         ];
 
-        // 預設單字庫 (G8 結構已更新以支援 MAGIC_E)
+        // 預設單字庫 (G2/G8 結構已更新)
         const DEFAULT_WORDS = {
+            // G2: 修正為只包含長母音
             g2_words: [
                 { id: crypto.randomUUID(), phonics: 'A-E', word: 'CAKE', hint: '生日蛋糕' },
-                { id: crypto.randomUUID(), phonics: 'IE', word: 'PIE', hint: '美味的派' },
-                { id: crypto.randomUUID(), phonics: 'OO', word: 'FOOD', hint: '好吃的食物' },
-                { id: crypto.randomUUID(), phonics: 'EW', word: 'NEW', hint: '新的' },
-                { id: crypto.randomUUID(), phonics: 'OA', word: 'BOAT', hint: '一艘船' },
-                { id: crypto.randomUUID(), phonics: 'EE', word: 'BEE', hint: '小蜜蜂' },
+                { id: crypto.randomUUID(), phonics: 'I-E', word: 'FIVE', hint: '數字五' },
+                { id: crypto.randomUUID(), phonics: 'O-E', word: 'NOSE', hint: '鼻子' },
+                { id: crypto.randomUUID(), phonics: 'U-E', word: 'TUBE', hint: '管子/地鐵' },
             ],
             g3_words: ['PUPPET', 'SKATEBOARD', 'HISTORY', 'HARD', 'EASY', 'DOLLAR', 'HAND', 'FOOT', 'EAR', 'EYE'],
             g4_bingo_words: ['SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY', 'HUNDRED', 'THOUSAND', 'DOLLAR', 'HOSPITAL', 'PARK', 'BANK', 'COAT', 'JEANS', 'GLOVES', 'HAT', 'SCARF', 'TIE'],
@@ -419,7 +423,7 @@
                 // Magic E (長母音) - pattern 包含 _, template 包含多個 ?
                 { id: crypto.randomUUID(), pattern: 'A_E', word_template: 'C?KE', full: 'CAKE' },
                 { id: crypto.randomUUID(), pattern: 'I_E', word_template: 'F?VE', full: 'FIVE' },
-                { id: crypto.randomUUID(), pattern: 'O_E', word_template: 'N?S?', full: 'NOSE' },
+                { id: crypto.randomUUID(), pattern: 'O_E', word_template: 'N?SE', full: 'NOSE' },
                 { id: crypto.randomUUID(), pattern: 'U_E', word_template: 'T?BE', full: 'TUBE' },
             ],
         };
@@ -439,7 +443,7 @@
         let state = {
             // G2
             g2_matchCards: [], g2_flippedCards: [], g2_matchCount: 0, g2_gameStatus: 'ready',
-            g2_score: 0, g2_currentQuestion: 0, 
+            // G2 Score/Quiz removed
             // G3
             g3_currentWord: '', g3_currentGuessWord: '', g3_guessedLetters: new Set(), g3_wrongGuesses: 0, g3_gameStatus: 'ready', g3_MAX_WRONG: 6, g3_emojiHint: '', 
             g3_score: 0, g3_currentQuestion: 0,
@@ -613,7 +617,7 @@
             return temp;
         }
 
-        // --- Quiz 結構新增 ---
+        // --- Quiz 結構新增 (G2 移除) ---
         function setupQuiz(gameKey) {
             state[`${gameKey}_score`] = 0;
             state[`${gameKey}_currentQuestion`] = 1;
@@ -732,51 +736,47 @@
         }
 
         // --- Game 2: 🎶 Phonics 發音配對 (Vowel Sound Match) ---
-        let g2_currentSource = [];
-
+        // NEW: 移除了 g2_currentSource, g2_score, g2_currentQuestion
+        
         function initGame2() {
             const source = localData.g2_words;
-            if (source.length < 4) { MessageBox.show("請在後台新增至少 4 組 Phonics 配對單字！", true); return; }
-
-            setupQuiz('g2');
-
-            // 隨機選取 10 組配對作為題庫來源 (如果少於 10 組，則全部選取)
-            g2_currentSource = shuffleArray(source).slice(0, MAX_QUESTIONS);
-            
-            // 開始第一個回合
-            startNextRoundG2();
-        }
-        
-        function startNextRoundG2() {
-            if (state.g2_gameStatus === 'finished') return;
-
-            const currentPair = g2_currentSource[state.g2_currentQuestion - 1];
-            if (!currentPair) {
-                 checkQuizEnd('g2', false); // 確保在題庫用盡時結束
-                 return;
+            // 修正: 必須至少有 4 組長母音才能開始遊戲 (8張卡)
+            const requiredPairs = 4;
+            if (source.length < requiredPairs) { 
+                MessageBox.show(`請在後台新增至少 ${requiredPairs} 組長母音配對單字！`, true); 
+                return; 
             }
 
-            // 1. 限制卡片對數為 1 組 (2 張卡片)
+            // 1. 選取固定的 4 組長母音配對（長母音通常只有 a_e, i_e, o_e, u_e 四種）
+            const targetPhonics = ['A-E', 'I-E', 'O-E', 'U-E'];
+            const limitedSource = targetPhonics.map(phonics => 
+                source.find(item => item.phonics.toUpperCase() === phonics)
+            ).filter(item => item);
+
+            if (limitedSource.length < requiredPairs) {
+                MessageBox.show(`長母音組合不足：請確保後台有 A-E, I-E, O-E, U-E 四組配對！`, true); 
+                return;
+            }
+
             state.g2_matchCount = 0;
             state.g2_flippedCards = [];
+            state.g2_gameStatus = 'playing';
 
             let cardValues = [];
-            const groupId = `match-${currentPair.phonics}`;
+            limitedSource.forEach((item, index) => {
+                const groupId = `match-${item.phonics}-${index}`;
 
-            // Phonics 卡片
-            cardValues.push({ id: crypto.randomUUID(), type: 'PHONICS', value: currentPair.phonics, groupId, matched: false, flipped: false, hint: currentPair.hint });
-            // Word 卡片
-            cardValues.push({ id: crypto.randomUUID(), type: 'WORD', value: currentPair.word, groupId, matched: false, flipped: false, hint: currentPair.hint });
-            
-            // 加入 2 組干擾項
-            const decoys = shuffleArray(localData.g2_words.filter(w => w.phonics !== currentPair.phonics)).slice(0, 2);
-            decoys.forEach(decoy => {
-                cardValues.push({ id: crypto.randomUUID(), type: 'PHONICS', value: decoy.phonics, groupId: 'decoy-' + decoy.phonics, matched: false, flipped: false, hint: 'Decoy' });
+                // Phonics 卡片 (黃/橘色調)
+                cardValues.push({ id: crypto.randomUUID(), type: 'PHONICS', value: item.phonics, groupId, matched: false, flipped: false, hint: item.hint, isTarget: true });
+                // Word 卡片 (藍/粉色調)
+                cardValues.push({ id: crypto.randomUUID(), type: 'WORD', value: item.word, groupId, matched: false, flipped: false, hint: item.hint, isTarget: true });
             });
 
             state.g2_matchCards = shuffleArray(cardValues);
             renderGame2();
         }
+        
+        // Removed startNextRoundG2 as it's no longer a quiz structure.
 
         async function handleCardClickG2(id) {
             const cardIndex = state.g2_matchCards.findIndex(c => c.id === id);
@@ -801,14 +801,16 @@
                     state.g2_flippedCards = [];
                     renderGame2();
                     
-                    MessageBox.show("正確配對！+1 分！✅", false);
+                    MessageBox.show("正確配對！✅", false);
 
-                    if (!checkQuizEnd('g2', true)) {
-                        setTimeout(startNextRoundG2, 1500); // 延遲 1.5 秒進入下一回合
+                    if (state.g2_matchCount === state.g2_matchCards.length / 2) {
+                         setTimeout(() => MessageBox.show("太棒了！所有發音配對成功！🎉", false), 500);
+                         state.g2_gameStatus = 'won';
+                         renderGame2();
                     }
 
                 } else {
-                    // 錯誤或干擾項翻開
+                    // 錯誤翻開
                     setTimeout(() => {
                         state.g2_matchCards.forEach(c => {
                             if (c.id === card1.id || c.id === card2.id) c.flipped = false;
@@ -831,12 +833,12 @@
                 let content = '';
                 let innerTextClass = `text-lg md:text-2xl font-extrabold text-gray-800`;
                 let openCardColorClass = card.type === 'PHONICS' ? 'card-type-phonics' : 'card-type-word';
-                let hiddenCardContent = card.type === 'PHONICS' ? 'phonics' : 'word'; 
+                let hiddenCardContent = card.type === 'PHONICS' ? 'PHONICS' : 'WORD'; 
 
 
-                if (card.matched || state.g2_gameStatus === 'finished') {
+                if (card.matched || state.g2_gameStatus === 'won') {
                     cardClasses += ` matched-success`;
-                    content = `${formatDisplayWord(card.phonics)} / ${formatDisplayWord(card.word || card.value)}`; 
+                    content = `${formatDisplayWord(card.value)}`; 
                 } else if (card.flipped) {
                     cardClasses += ` ${openCardColorClass} border-gray-500`;
                     content = card.type === 'PHONICS' ? `[${formatDisplayWord(card.value)}]` : formatDisplayWord(card.value); 
@@ -866,21 +868,18 @@
                 });
             }, 0);
             
-            const quizInfo = state.g2_gameStatus === 'finished' 
-                ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g2_score} / ${MAX_QUESTIONS}</p>`
-                : `<p class="text-xl font-bold">回合: ${state.g2_currentQuestion} / ${MAX_QUESTIONS} (得分: ${state.g2_score})</p>`;
+            // REMOVED: quizInfo
 
             container.innerHTML = `
                 <section class="w-full bg-accent-yellow p-4 rounded-xl shadow-inner border-b-8 border-yellow-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-yellow-900 mb-2 text-center">🎶 phonics 發音配對 (vowel sound match)</h2>
-                    <div class="text-center mb-4">${quizInfo}</div>
-                    <p class="text-center text-sm mb-4">目標: 點擊卡片，配對長母音組合和對應的單字。單字庫總數: ${localData.g2_words.length} 組。</p>
+                    <h2 class="text-xl md:text-3xl font-bold text-yellow-900 mb-2 text-center">🎶 Phonics 發音配對 (Long Vowel Match)</h2>
+                    <p class="text-center text-sm mb-4">目標: 配對長母音組合 (A-E, I-E, O-E, U-E) 與對應的單字。已完成 ${state.g2_matchCount}/${state.g2_matchCards.length / 2} 組。</p>
                     <div id="match-game-grid" class="grid grid-cols-4 gap-3 md:gap-4 max-w-xl mx-auto">
                         ${cardsHtml}
                     </div>
                     <div class="text-center mt-6">
                         <button onclick="initGame2()" class="bg-primary-pink hover:bg-pink-400 text-white font-bold py-2 px-6 rounded-full shadow-cute text-lg">
-                            ${state.g2_gameStatus === 'finished' ? '重新挑戰' : '重設遊戲'}
+                            ${state.g2_matchCount === state.g2_matchCards.length / 2 ? '再玩一次' : '重新開始'}
                         </button>
                     </div>
                 </section>
@@ -1244,7 +1243,7 @@
                      <div class="mb-2">${limitInfo}</div>
                     <div class="mb-4 h-12 flex items-center justify-center">
                         <p class="text-4xl font-black text-red-700 transition duration-300 item-name-display">
-                            ${state.g4_lastCalledWord ? `單字: ${formatDisplayWord(state.g4_lastCalledWord)}` : state.g4_gameStatus === 'ready' ? '點擊開始按鈕' : (state.g4_gameStatus === 'finished' ? '遊戲結束' : '等待下一輪...')}
+                            ${state.g4_lastCalledWord ? `單字: ${formatDisplayWord(state.g4_lastCalledWord)}` : state.g4_gameStatus === 'ready' ? '點擊開始按鈕' : (state.g4_calledWords.size >= MAX_WORDS_TO_CALL ? '抽籤數已達上限' : '等待下一輪...')}
                         </p>
                     </div>
                     <button onclick="startCallingG4()" 
@@ -1928,8 +1927,7 @@
             state.g8_currentWord = currentWord;
             state.g8_gameStatus = 'playing';
             
-            // 每次出題時自動朗讀一次
-            callTTS(state.g8_currentWord.full); 
+            // 修正: 移除自動朗讀 callTTS(state.g8_currentWord.full); 
 
             renderGame8();
         }
@@ -1982,13 +1980,30 @@
             // 使用 word_template 進行渲染
             const wordDisplayHtml = renderWordDisplayG8(wordBlock.word_template.toUpperCase());
 
-            const allPatterns = [...new Set(localData.g8_digraphs.map(d => d.pattern))];
-            const digraphButtons = shuffleArray(allPatterns).map(p => `
+            // 1. Get the correct pattern
+            const correctPattern = wordBlock.pattern.toUpperCase();
+
+            // 2. Get all unique patterns and filter for decoys
+            const allUniquePatterns = [...new Set(localData.g8_digraphs.map(d => d.pattern.toUpperCase()))];
+            const incorrectPatterns = shuffleArray(allUniquePatterns.filter(p => p !== correctPattern));
+
+            // 3. Select up to 3 decoys
+            const decoys = incorrectPatterns.slice(0, 3);
+            
+            // 4. Combine and ensure max 4 options
+            let finalOptions = [...decoys, correctPattern];
+            
+            // 5. Shuffle the final options
+            finalOptions = shuffleArray(finalOptions);
+
+            // Modified button generation to use finalOptions and force UPPERCASE display
+            const digraphButtons = finalOptions.map(p => `
                 <button onclick="handleDigraphClickG8('${p}')"
-                        class="key-btn bg-red-400 hover:bg-red-500 active:shadow-key-active shadow-cute text-xl md:text-3xl font-bold text-white rounded-xl transition duration-150">
-                    ${formatDisplayWord(p)}
+                        class="key-btn digraph-btn bg-red-400 hover:bg-red-500 active:shadow-key-active shadow-cute text-xl md:text-3xl font-bold text-white rounded-xl transition duration-150">
+                    ${p.toUpperCase()} 
                 </button>
             `).join('');
+
 
             const quizInfo = state.g8_gameStatus === 'finished' 
                 ? `<p class="text-2xl font-black text-green-700">最終得分: ${state.g8_score} / ${MAX_QUESTIONS}</p>`
@@ -1999,7 +2014,7 @@
                 <section class="w-full bg-secondary-blue p-4 rounded-xl shadow-inner border-b-8 border-blue-600">
                     <h2 class="text-xl md:text-3xl font-bold text-blue-800 mb-2 text-center">💥 神奇發音機 (digraph blaster)</h2>
                     <div class="text-center mb-4">${quizInfo}</div>
-                    <p class="text-center text-sm text-blue-900 mb-4">目標: 點擊正確的發音組合 (${allPatterns.map(p => formatDisplayWord(p)).join(', ')}) 來完成單字！</p>
+                    <p class="text-center text-sm text-blue-900 mb-4">目標: 點擊正確的發音組合來完成單字！</p>
                 </section>
                 
                 ${state.g8_gameStatus !== 'finished' ? `
