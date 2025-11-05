@@ -395,6 +395,9 @@
                 { id: crypto.randomUUID(), phonics: 'I-E', word: 'FIVE', hint: '數字五' },
                 { id: crypto.randomUUID(), phonics: 'O-E', word: 'NOSE', hint: '鼻子' },
                 { id: crypto.randomUUID(), phonics: 'U-E', word: 'TUBE', hint: '管子/地鐵' },
+                // 增加一些非長母音的預設 Phonics 範例，以防使用者清空後台
+                { id: crypto.randomUUID(), phonics: 'SH', word: 'SHIP', hint: '船隻' },
+                { id: crypto.randomUUID(), phonics: 'EE', word: 'BEE', hint: '蜜蜂' },
             ],
             g3_words: ['PUPPET', 'SKATEBOARD', 'HISTORY', 'HARD', 'EASY', 'DOLLAR', 'HAND', 'FOOT', 'EAR', 'EYE'],
             g4_bingo_words: ['SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY', 'HUNDRED', 'THOUSAND', 'DOLLAR', 'HOSPITAL', 'PARK', 'BANK', 'COAT', 'JEANS', 'GLOVES', 'HAT', 'SCARF', 'TIE'],
@@ -740,23 +743,15 @@
         
         function initGame2() {
             const source = localData.g2_words;
-            // 修正: 必須至少有 4 組長母音才能開始遊戲 (8張卡)
             const requiredPairs = 4;
+            
             if (source.length < requiredPairs) { 
-                MessageBox.show(`請在後台新增至少 ${requiredPairs} 組長母音配對單字！`, true); 
+                MessageBox.show(`後台單字庫中 Phonics 配對單字不足 ${requiredPairs} 組！`, true); 
                 return; 
             }
-
-            // 1. 選取固定的 4 組長母音配對（長母音通常只有 a_e, i_e, o_e, u_e 四種）
-            const targetPhonics = ['A-E', 'I-E', 'O-E', 'U-E'];
-            const limitedSource = targetPhonics.map(phonics => 
-                source.find(item => item.phonics.toUpperCase() === phonics)
-            ).filter(item => item);
-
-            if (limitedSource.length < requiredPairs) {
-                MessageBox.show(`長母音組合不足：請確保後台有 A-E, I-E, O-E, U-E 四組配對！`, true); 
-                return;
-            }
+            
+            // 修正: 移除長母音的嚴格篩選，改為隨機選取 4 組
+            const limitedSource = shuffleArray(source).slice(0, requiredPairs);
 
             state.g2_matchCount = 0;
             state.g2_flippedCards = [];
@@ -872,8 +867,8 @@
 
             container.innerHTML = `
                 <section class="w-full bg-accent-yellow p-4 rounded-xl shadow-inner border-b-8 border-yellow-600">
-                    <h2 class="text-xl md:text-3xl font-bold text-yellow-900 mb-2 text-center">🎶 Phonics 發音配對 (Long Vowel Match)</h2>
-                    <p class="text-center text-sm mb-4">目標: 配對長母音組合 (A-E, I-E, O-E, U-E) 與對應的單字。已完成 ${state.g2_matchCount}/${state.g2_matchCards.length / 2} 組。</p>
+                    <h2 class="text-xl md:text-3xl font-bold text-yellow-900 mb-2 text-center">🎶 Phonics 發音配對 (Word-Sound Match)</h2>
+                    <p class="text-center text-sm mb-4">目標: 配對 Phonics 組合與對應的單字。已完成 ${state.g2_matchCount}/${state.g2_matchCards.length / 2} 組。</p>
                     <div id="match-game-grid" class="grid grid-cols-4 gap-3 md:gap-4 max-w-xl mx-auto">
                         ${cardsHtml}
                     </div>
